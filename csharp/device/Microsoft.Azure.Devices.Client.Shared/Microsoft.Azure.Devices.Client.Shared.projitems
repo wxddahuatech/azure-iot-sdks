@@ -249,6 +249,21 @@
     <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\ITransportSettings.cs">
       <Link>ITransportSettings.cs</Link>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\IPipelineContext.cs">
+      <Link>IPipelineContext.cs</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\PipelineContext.cs">
+      <Link>PipelineContext.cs</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\IDeviceClientPipelineBuilder.cs">
+      <Link>IDeviceClientPipelineBuilder.cs</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\DeviceClientPipelineBuilder.cs">
+      <Link>DeviceClientPipelineBuilder.cs</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\IContinuationProvider.cs">
+      <Link>IContinuationProvider.cs</Link>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\MappingType.cs">
       <Link>MappingType.cs</Link>
     </Compile>
@@ -284,6 +299,9 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\Transport\HttpTransportHandler.cs">
       <Link>HttpTransportHandler.cs</Link>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\Transport\TransportHandler.cs">
+      <Link>TransportHandler.cs</Link>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)$(DeviceClientDir)\Transport\IHttpClientHelper.cs">
       <Link>IHttpClientHelper.cs</Link>
