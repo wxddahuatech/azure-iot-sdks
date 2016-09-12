@@ -3,7 +3,7 @@ var indexSectionsWithContent =
   0: "bdegimpstw",
   1: "i",
   2: "is",
-  3: "dis",
+  3: "dims",
   4: "dipt",
   5: "i",
   6: "bdegsw",
