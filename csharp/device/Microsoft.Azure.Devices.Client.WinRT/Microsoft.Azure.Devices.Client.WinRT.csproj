@@ -140,7 +140,7 @@
     <Compile Include="$(DeviceClientDir)\Transport\AmqpTransportHandler.cs" />
     <Compile Include="$(DeviceClientDir)\WinRTHelpers.cs" />
     <Compile Include="$(DeviceClientDir)\WinRTResources.cs" />
-    <Compile Include="..\Microsoft.Azure.Devices.Client\Transport\ProtocolRoutingDelegatingHandler.cs">
+    <Compile Include="$(DeviceClientDir)\Transport\ProtocolRoutingDelegatingHandler.cs">
       <Link>ProtocolRoutingDelegatingHandler.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
