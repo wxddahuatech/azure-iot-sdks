@@ -17,7 +17,10 @@ namespace Microsoft.Azure.Devices.Client.Transport
     // Copyright (c) Microsoft. All rights reserved.
     // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-    public sealed class ErrorDelegatingHandler : DefaultDelegatingHandler
+#if !WINDOWS_UWP
+    public
+#endif
+    sealed class ErrorDelegatingHandler : DefaultDelegatingHandler
     {
 
         internal static readonly HashSet<Type> TransientExceptions = new HashSet<Type>

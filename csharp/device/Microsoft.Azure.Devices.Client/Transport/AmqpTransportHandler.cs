@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using Microsoft.Azure.Devices.Client.Exceptions;
     using Microsoft.Azure.Devices.Client.Extensions;
 
-    public sealed class AmqpTransportHandler : TransportHandler
+    sealed class AmqpTransportHandler : TransportHandler
     {
         static readonly IotHubConnectionCache TcpConnectionCache = new IotHubConnectionCache();
         static readonly IotHubConnectionCache WsConnectionCache = new IotHubConnectionCache();

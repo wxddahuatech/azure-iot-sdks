@@ -3,11 +3,12 @@
 
 namespace Microsoft.Azure.Devices.Client
 {
-    using System;
-
-    public interface IDeviceClientPipelineBuilder
+#if !WINDOWS_UWP
+    public
+#endif
+    interface IDeviceClientPipelineBuilder
     {
-        IDeviceClientPipelineBuilder With(Func<IPipelineContext, IDelegatingHandler> delegatingHandlerCreator);
+        IDeviceClientPipelineBuilder With(ContinuationFactory<IDelegatingHandler> delegatingHandlerCreator);
 
         IDelegatingHandler Build(IPipelineContext context);
     }

@@ -7,7 +7,10 @@ namespace Microsoft.Azure.Devices.Client
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    public interface IDelegatingHandler: IContinuationProvider<IDelegatingHandler>, IDisposable
+#if !WINDOWS_UWP
+    public
+#endif
+    interface IDelegatingHandler : IContinuationProvider<IDelegatingHandler>, IDisposable
     {
         Task AbandonAsync(string lockToken);
         Task CloseAsync();

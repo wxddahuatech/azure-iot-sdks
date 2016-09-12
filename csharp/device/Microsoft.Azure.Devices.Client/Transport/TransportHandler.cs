@@ -6,19 +6,22 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using System.Diagnostics;
     using System.Threading.Tasks;
 
-    public abstract class TransportHandler : DefaultDelegatingHandler
+#if !WINDOWS_UWP
+    public abstract
+#endif
+    class TransportHandler : DefaultDelegatingHandler
     {
-        readonly ITransportSettings transportSettings;
+        protected ITransportSettings TransportSettings;
 
         protected TransportHandler(IPipelineContext context, ITransportSettings transportSettings)
             : base(context)
         {
-            this.transportSettings = transportSettings;
+            this.TransportSettings = transportSettings;
         }
 
         public override Task<Message> ReceiveAsync()
         {
-            return this.ReceiveAsync(this.transportSettings.DefaultReceiveTimeout);
+            return this.ReceiveAsync(this.TransportSettings.DefaultReceiveTimeout);
         }
     }
 }

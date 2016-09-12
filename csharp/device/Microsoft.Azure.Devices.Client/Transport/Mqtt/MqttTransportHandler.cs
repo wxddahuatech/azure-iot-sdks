@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Client.Transport.Mqtt
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
     using TransportType = Microsoft.Azure.Devices.Client.TransportType;
 
-    public sealed class MqttTransportHandler : TransportHandler
+    sealed class MqttTransportHandler : TransportHandler
     {
         const int ProtocolGatewayPort = 8883;
 

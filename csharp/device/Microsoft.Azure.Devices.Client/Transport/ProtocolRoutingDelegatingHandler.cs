@@ -18,7 +18,10 @@ namespace Microsoft.Azure.Devices.Client.Transport
     /// Tries to open open connection in the protocol order it was set. 
     /// If fails tries to open the next one, etc.
     /// </summary>
-    public class ProtocolRoutingDelegatingHandler : DefaultDelegatingHandler
+#if !WINDOWS_UWP
+    public
+#endif
+    class ProtocolRoutingDelegatingHandler : DefaultDelegatingHandler
     {
         internal delegate IDelegatingHandler TransportHandlerFactory(IotHubConnectionString iotHubConnectionString, ITransportSettings transportSettings);
 
@@ -37,7 +40,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             Exception lastException = null;
             // Concrete Device Client creation was deferred. Use prioritized list of transports.
-            foreach (ITransportSettings transportSetting in this.Context.Get<ITransportSettings[]>())
+            foreach (ITransportSettings transportSetting in this.Context.Get<ITransportSettings[]>(typeof(ITransportSettings[]).Name))
             {
                 try
                 {

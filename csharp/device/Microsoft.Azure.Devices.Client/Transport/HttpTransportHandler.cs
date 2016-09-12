@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using Microsoft.WindowsAzure.Storage.Blob;
 #endif
 
-    public sealed class HttpTransportHandler : TransportHandler
+    sealed class HttpTransportHandler : TransportHandler
     {
         static readonly TimeSpan DefaultOperationTimeout = TimeSpan.FromSeconds(60);
         static readonly IDictionary<string, string> MapMessageProperties2HttpHeaders = new Dictionary<string, string>
@@ -40,6 +40,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
 #if WINDOWS_UWP || PCL
         internal HttpTransportHandler(IotHubConnectionString iotHubConnectionString)
+            : base(null, new Http1TransportSettings())
         {
             this.deviceId = iotHubConnectionString.DeviceId;
             this.httpClientHelper = new HttpClientHelper(
@@ -62,10 +63,10 @@ namespace Microsoft.Azure.Devices.Client.Transport
 #endif
 
 #if WINDOWS_UWP || PCL
-        internal HttpTransportHandler(IotHubConnectionString iotHubConnectionString, Http1TransportSettings transportSettings)
-            : this(iotHubConnectionString)
+        internal HttpTransportHandler(IPipelineContext context, IotHubConnectionString iotHubConnectionString, Http1TransportSettings transportSettings)
+            : base(context, transportSettings)
         {
-            this.transportSettings = transportSettings;
+            this.TransportSettings = transportSettings;
             this.deviceId = iotHubConnectionString.DeviceId;
             this.httpClientHelper = new HttpClientHelper(
                 iotHubConnectionString.HttpsEndpoint,

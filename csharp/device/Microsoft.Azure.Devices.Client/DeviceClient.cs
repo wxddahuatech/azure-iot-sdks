@@ -167,8 +167,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
 
         static TransportHandler CreateTransportHandler(IPipelineContext context)
         {
-            var connectionString = context.Get<IotHubConnectionString>();
-            var transportSetting = context.Get<ITransportSettings>();
+            var connectionString = context.Get<IotHubConnectionString>(typeof(IotHubConnectionString).Name);
+            var transportSetting = context.Get<ITransportSettings>(typeof(ITransportSettings).Name);
 
             switch (transportSetting.GetTransportType())
             {
@@ -189,8 +189,17 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
 #else
         DeviceClient(IotHubConnectionString iotHubConnectionString)
         {
-            this.InnerHandler = new GateKeeperDelegatingHandler(
-                new ErrorDelegatingHandler(() => new HttpTransportHandler(iotHubConnectionString)));
+            this.iotHubConnectionString = iotHubConnectionString;
+
+            var pipelineContext = new PipelineContext();
+            pipelineContext.Set(iotHubConnectionString);
+
+            IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
+                .With(ctx => new GateKeeperDelegatingHandler(ctx))
+                .With(ctx => new ErrorDelegatingHandler(ctx))
+                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
+
+            this.InnerHandler = pipelineBuilder.Build(pipelineContext);
         }
 #endif
 
@@ -337,7 +346,10 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <param name="transportType">Specifies whether Amqp or Http transport is used</param>
         /// <param name="pipelineBuilder">Device client pipeline builder</param>
         /// <returns>DeviceClient</returns>
-        public static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType, IDeviceClientPipelineBuilder pipelineBuilder)
+#if !WINDOWS_UWP
+        public
+#endif
+        static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             if (connectionString == null)
             {
@@ -433,7 +445,10 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <param name="transportSettings">Prioritized list of transports and their settings</param>
         /// <param name="pipelineBuilder">Device client pipeline builder</param>
         /// <returns>DeviceClient</returns>
-        public static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
+#if !WINDOWS_UWP
+        public
+#endif
+        static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             if (connectionString == null)
             {

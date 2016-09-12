@@ -8,9 +8,9 @@ namespace Microsoft.Azure.Devices.Client
 
     class DeviceClientPipelineBuilder : IDeviceClientPipelineBuilder
     {
-        readonly LinkedList<Func<IPipelineContext, IDelegatingHandler>> pipeline = new LinkedList<Func<IPipelineContext, IDelegatingHandler>>();
+        readonly LinkedList<ContinuationFactory<IDelegatingHandler>> pipeline = new LinkedList<ContinuationFactory<IDelegatingHandler>>();
 
-        public IDeviceClientPipelineBuilder With(Func<IPipelineContext, IDelegatingHandler> delegatingHandlerCreator)
+        public IDeviceClientPipelineBuilder With(ContinuationFactory<IDelegatingHandler> delegatingHandlerCreator)
         {
             this.pipeline.AddLast(delegatingHandlerCreator);
             return this;
@@ -23,11 +23,11 @@ namespace Microsoft.Azure.Devices.Client
 
         public IDelegatingHandler Build(IPipelineContext context)
         {
-            LinkedListNode<Func<IPipelineContext, IDelegatingHandler>> currentHandlerFactoryNode = this.pipeline.First;
+            LinkedListNode<ContinuationFactory<IDelegatingHandler>> currentHandlerFactoryNode = this.pipeline.First;
             while (currentHandlerFactoryNode.Next != null)
             {
-                LinkedListNode<Func<IPipelineContext, IDelegatingHandler>> current = currentHandlerFactoryNode;
-                Func<IPipelineContext, IDelegatingHandler> factory = current.Value;
+                LinkedListNode<ContinuationFactory<IDelegatingHandler>> current = currentHandlerFactoryNode;
+                ContinuationFactory<IDelegatingHandler> factory = current.Value;
                 current.Value = ctx =>
                 {
                     IDelegatingHandler delegatingHandler = factory(ctx);

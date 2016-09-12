@@ -232,7 +232,6 @@
     <Compile Include="PipelineContext.cs" />
     <Compile Include="Transport\DefaultDelegatingHandler.cs" />
     <Compile Include="IDelegatingHandler.cs" />
-    <Compile Include="IotHubClientWebSocket.cs" />
     <Compile Include="IotHubConnection.cs" />
     <Compile Include="IotHubDeviceMuxConnection.cs" />
     <Compile Include="IotHubDeviceScopeConnectionPool.cs" />
@@ -264,8 +263,8 @@
     <Compile Include="Transport\Mqtt\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Transport\Mqtt\Util.cs" />
     <Compile Include="Transport\Mqtt\WillMessage.cs" />
+    <Compile Include="Transport\ProtocolRoutingDelegatingHandler.cs" />
     <Compile Include="Transport\RetryDelegatingHandler.cs" />
-    <Compile Include="Transport\RoutingDelegatingHandler.cs" />
     <Compile Include="Transport\TransportHandler.cs" />
   </ItemGroup>
   <ItemGroup>

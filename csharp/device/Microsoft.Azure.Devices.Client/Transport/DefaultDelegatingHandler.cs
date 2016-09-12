@@ -8,7 +8,10 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using System.Threading.Tasks;
     using Microsoft.Azure.Devices.Client.Common;
 
-    public abstract class DefaultDelegatingHandler : IDelegatingHandler
+#if !WINDOWS_UWP
+    public abstract 
+#endif
+    class DefaultDelegatingHandler : IDelegatingHandler
     {
         static readonly Task<Message> DummyResultObject = Task.FromResult((Message)null);
 
@@ -21,7 +24,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         public IPipelineContext Context { get; protected set; }
 
-        public Func<IPipelineContext, IDelegatingHandler> ContinuationFactory { get; set; }
+        public ContinuationFactory<IDelegatingHandler> ContinuationFactory { get; set; }
 
         public IDelegatingHandler InnerHandler
         {
