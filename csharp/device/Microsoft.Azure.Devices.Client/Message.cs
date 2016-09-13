@@ -400,7 +400,6 @@ namespace Microsoft.Azure.Devices.Client
             }
         }
 
-
 #if !WINDOWS_UWP && !PCL && !NETMF
         internal AmqpMessage SerializedAmqpMessage
         {
