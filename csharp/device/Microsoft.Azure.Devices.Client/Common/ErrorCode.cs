@@ -47,10 +47,6 @@ namespace Microsoft.Azure.Devices.Client.Errors
         KeyNameNotFound = 400,
 
         //Internal Warning Range 1000-1299
-        WinFabApplicationCleanupNotAttempted = 1000,
-
-        //Throttling
-        ThrottleBacklogLimitExceeded = 429002,
-        ThrottlingBacklogTimeout = 429003,
+        WinFabApplicationCleanupNotAttempted = 1000
     }
 }

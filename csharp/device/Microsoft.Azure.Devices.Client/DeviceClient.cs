@@ -173,8 +173,6 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
                 .With(ctx => new GateKeeperDelegatingHandler(ctx))
 #if !WINDOWS_UWP && !PCL
-                // UWP does not support retry yet. We need to make the underlying Message stream accessible internally on UWP
-                // to be sure that either the stream has not been read or it is seekable to safely retry operation
                 .With(ctx => new RetryDelegatingHandler(ctx))
 #endif
                 .With(ctx => new ErrorDelegatingHandler(ctx))

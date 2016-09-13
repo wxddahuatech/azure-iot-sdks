@@ -399,23 +399,6 @@ namespace Microsoft.Azure.Devices.Client
                 return this.bodyStream;
             }
         }
-#if WINDOWS_UWP || PCL
-        public bool CanSeek
-        {
-            get
-            {
-                return this.bodyStream.CanSeek;
-            }
-        }
-
-        public long Position
-        {
-            get
-            {
-                return this.bodyStream.Position;
-            }
-        }
-#endif
 
 
 #if !WINDOWS_UWP && !PCL && !NETMF
