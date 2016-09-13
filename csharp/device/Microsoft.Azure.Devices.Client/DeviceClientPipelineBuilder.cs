@@ -8,36 +8,34 @@ namespace Microsoft.Azure.Devices.Client
 
     class DeviceClientPipelineBuilder : IDeviceClientPipelineBuilder
     {
-        readonly LinkedList<ContinuationFactory<IDelegatingHandler>> pipeline = new LinkedList<ContinuationFactory<IDelegatingHandler>>();
+        readonly List<ContinuationFactory<IDelegatingHandler>> pipeline = new List<ContinuationFactory<IDelegatingHandler>>();
 
         public IDeviceClientPipelineBuilder With(ContinuationFactory<IDelegatingHandler> delegatingHandlerCreator)
         {
-            this.pipeline.AddLast(delegatingHandlerCreator);
+            this.pipeline.Add(delegatingHandlerCreator);
             return this;
-        }
-
-        class Pipeline
-        {
-            
         }
 
         public IDelegatingHandler Build(IPipelineContext context)
         {
-            LinkedListNode<ContinuationFactory<IDelegatingHandler>> currentHandlerFactoryNode = this.pipeline.First;
-            while (currentHandlerFactoryNode.Next != null)
+            if (this.pipeline.Count == 0)
             {
-                LinkedListNode<ContinuationFactory<IDelegatingHandler>> current = currentHandlerFactoryNode;
-                ContinuationFactory<IDelegatingHandler> factory = current.Value;
-                current.Value = ctx =>
-                {
-                    IDelegatingHandler delegatingHandler = factory(ctx);
-                    delegatingHandler.ContinuationFactory = current.Next?.Value;
-                    return delegatingHandler;
-                };
-                currentHandlerFactoryNode = currentHandlerFactoryNode.Next;
+                throw new InvalidOperationException("Pipeline is not setup");
             }
 
-            IDelegatingHandler root = this.pipeline.First.Value(context);
+            for (int i = 0; i < this.pipeline.Count - 1; i++)
+            {
+                ContinuationFactory<IDelegatingHandler> current = this.pipeline[i];
+                ContinuationFactory<IDelegatingHandler> next = this.pipeline[i + 1];
+                this.pipeline[i] = ctx =>
+                {
+                    IDelegatingHandler delegatingHandler = current(ctx);
+                    delegatingHandler.ContinuationFactory = next;
+                    return delegatingHandler;
+                };
+            }
+
+            IDelegatingHandler root = this.pipeline[0](context);
             return root;
         }
     }

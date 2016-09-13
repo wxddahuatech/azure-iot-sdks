@@ -44,12 +44,12 @@ namespace Microsoft.Azure.Devices.Client.Transport
             }
         }
 
-        class SmartRetryStrategy : RetryStrategy
+        class IotHubRuntimeOperationRetryStrategy : RetryStrategy
         {
             readonly ShouldRetry defaultRetryStrategy;
             readonly ShouldRetry throttlingRetryStrategy;
 
-            public SmartRetryStrategy(int retryCount)
+            public IotHubRuntimeOperationRetryStrategy(int retryCount)
                 : base(null, false)
             {
                 this.defaultRetryStrategy = new ExponentialBackoff(retryCount, TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(10), TimeSpan.FromMilliseconds(100)).GetShouldRetry();
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         public RetryDelegatingHandler(IPipelineContext context)
             : base(context)
         {
-            this.retryPolicy = new RetryPolicy(new IotHubTransientErrorIgnoreStrategy(), new SmartRetryStrategy(DefaultRetryCount));
+            this.retryPolicy = new RetryPolicy(new IotHubTransientErrorIgnoreStrategy(), new IotHubRuntimeOperationRetryStrategy(DefaultRetryCount));
         }
 
         public override async Task SendEventAsync(Message message)

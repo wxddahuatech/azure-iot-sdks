@@ -149,22 +149,45 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             this.InnerHandler = innerHandler;
         }
 
+#else
+        DeviceClient(IotHubConnectionString iotHubConnectionString)
+        {
+            this.iotHubConnectionString = iotHubConnectionString;
+
+            var pipelineContext = new PipelineContext();
+            pipelineContext.Set(iotHubConnectionString);
+
+            IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
+                .With(ctx => new GateKeeperDelegatingHandler(ctx))
+                .With(ctx => new ErrorDelegatingHandler(ctx))
+                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
+
+            this.InnerHandler = pipelineBuilder.Build(pipelineContext);
+        }
+#endif
+
+
+
         static IDeviceClientPipelineBuilder BuildPipeline()
         {
             IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
                 .With(ctx => new GateKeeperDelegatingHandler(ctx))
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
                 // UWP does not support retry yet. We need to make the underlying Message stream accessible internally on UWP
                 // to be sure that either the stream has not been read or it is seekable to safely retry operation
                 .With(ctx => new RetryDelegatingHandler(ctx))
 #endif
                 .With(ctx => new ErrorDelegatingHandler(ctx))
+#if !PCL
                 .With(ctx => new ProtocolRoutingDelegatingHandler(ctx))
                 .With(ctx => CreateTransportHandler(ctx));
-
+#else
+                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
+#endif
             return pipelineBuilder;
         }
 
+#if !PCL
         static TransportHandler CreateTransportHandler(IPipelineContext context)
         {
             var connectionString = context.Get<IotHubConnectionString>(typeof(IotHubConnectionString).Name);
@@ -184,22 +207,6 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                 default:
                     throw new InvalidOperationException("Unsupported Transport Setting {0}".FormatInvariant(transportSetting));
             }
-        }
-
-#else
-        DeviceClient(IotHubConnectionString iotHubConnectionString)
-        {
-            this.iotHubConnectionString = iotHubConnectionString;
-
-            var pipelineContext = new PipelineContext();
-            pipelineContext.Set(iotHubConnectionString);
-
-            IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
-                .With(ctx => new GateKeeperDelegatingHandler(ctx))
-                .With(ctx => new ErrorDelegatingHandler(ctx))
-                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
-
-            this.InnerHandler = pipelineBuilder.Build(pipelineContext);
         }
 #endif
 

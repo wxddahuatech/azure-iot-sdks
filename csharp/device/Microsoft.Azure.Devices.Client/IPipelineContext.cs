@@ -12,15 +12,13 @@ namespace Microsoft.Azure.Devices.Client
 
         void Set<T>(string key, T value);
 
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-        object Get(string key);
-#else
         T Get<T>() where T : class;
 
         T Get<T>(T defaultValue);
-#endif
 
+#if WINDOWS_UWP
+        [Windows.Foundation.Metadata.DefaultOverload]
+#endif
         T Get<T>(string key) where T : class;
 
         T Get<T>(string key, T defaultValue);

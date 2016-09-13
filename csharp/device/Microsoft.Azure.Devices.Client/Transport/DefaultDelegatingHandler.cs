@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Devices.Client.Common;
 
@@ -15,6 +16,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
     {
         static readonly Task<Message> DummyResultObject = Task.FromResult((Message)null);
 
+        int innerHandlerSet;
         IDelegatingHandler innerHandler;
 
         protected DefaultDelegatingHandler(IPipelineContext context)
@@ -30,11 +32,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             get
             {
-                return this.innerHandler ?? (this.innerHandler = this.ContinuationFactory?.Invoke(Context));
+                if (Volatile.Read(ref this.innerHandler) == null && Interlocked.CompareExchange(ref this.innerHandlerSet, 1, 0) == 0)
+                {
+                    Volatile.Write(ref this.innerHandler, this.ContinuationFactory?.Invoke(this.Context));
+                }
+                return Volatile.Read(ref this.innerHandler);
             }
             protected set
             {
-                this.innerHandler = value;
+                Volatile.Write(ref this.innerHandler, value);
             }
         }
 

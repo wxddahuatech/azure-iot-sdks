@@ -33,6 +33,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             typeof(ObjectDisposedException),
             typeof(OperationCanceledException),
             typeof(TaskCanceledException),
+            typeof(IotHubThrottledException),
 #if !PCL && !WINDOWS_UWP
             typeof(System.Net.Sockets.SocketException),
 #endif
@@ -186,32 +187,40 @@ namespace Microsoft.Azure.Devices.Client.Transport
             return exception.Unwind(true).Any(e => TransportTransientExceptions.Contains(e.GetType())) || IsThrottling(exception);
         }
 
+        /// <summary>
+        /// this is a hack and it should be fixed in one of next releases - we should rely on the exception type only.
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <returns></returns>
         internal static bool IsThrottling(Exception exception)
         {
-            //hack - should be fixed in one of next releases - we should rely on exception type only
             if (exception is IotHubClientTransientException)
             {
                 if (exception.InnerException == null)
                 {
                     return false;
                 }
+                
+                //unwrap the internal exception
                 exception = exception.InnerException;
             }
-            var iotHubException = exception as IotHubException;
+
             if (exception is IotHubThrottledException)
             {
                 return true;
             }
-            if (iotHubException == null)
+
+            if (exception is IotHubException)
             {
-                return false;
+                return exception.Message.Contains("throttl"); //...e/...ing/...ed;
             }
-            return iotHubException.Message.Contains("throttl"); //...e/...ing/...ed;
+
+            return false;
         }
 
         static bool IsTransient(Exception exception)
         {
-            return exception.Unwind(true).Any(e => TransientExceptions.Contains(e.GetType()));
+            return exception.Unwind(true).Any(e => TransientExceptions.Contains(e.GetType())) || IsThrottling(exception);
         }
 
         void Reset(TaskCompletionSource<int> openCompletionBeforeOperationStarted, IDelegatingHandler handlerBeforeOperationStarted)
