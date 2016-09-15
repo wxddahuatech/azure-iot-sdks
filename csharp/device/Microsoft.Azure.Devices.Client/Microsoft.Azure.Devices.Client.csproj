@@ -202,6 +202,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Transport\TransportHandlerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AmqpConnectionPoolSettings.cs" />
@@ -244,6 +245,7 @@
     <Compile Include="Transport\FileUploadNotificationResponse.cs" />
     <Compile Include="Transport\FileUploadRequest.cs" />
     <Compile Include="Transport\FileUploadResponse.cs" />
+    <Compile Include="Transport\ITransportHandlerFactory.cs" />
     <Compile Include="Transport\Mqtt\ChannelMessageProcessingException.cs" />
     <Compile Include="Transport\Mqtt\ConcurrentObjectPool.cs" />
     <Compile Include="Transport\Mqtt\ICancellable.cs" />

@@ -7,9 +7,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using System.Threading.Tasks;
 
 #if !WINDOWS_UWP
-    public abstract
+    public
 #endif
-    class TransportHandler : DefaultDelegatingHandler
+    abstract class TransportHandler : DefaultDelegatingHandler
     {
         protected ITransportSettings TransportSettings;
 

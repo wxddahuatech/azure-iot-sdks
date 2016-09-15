@@ -168,7 +168,9 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
 
         static IDeviceClientPipelineBuilder BuildPipeline()
         {
+#if !PCL
             var transporthandlerFactory = new TransportHandlerFactory();
+#endif
             IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
                 .With(ctx => new GateKeeperDelegatingHandler(ctx))
 #if !WINDOWS_UWP && !PCL

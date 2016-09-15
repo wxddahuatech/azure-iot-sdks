@@ -10,9 +10,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using Microsoft.Azure.Devices.Client.Common;
 
 #if !WINDOWS_UWP
-    public abstract 
+    public
 #endif
-    class DefaultDelegatingHandler : IDelegatingHandler
+    abstract class DefaultDelegatingHandler : IDelegatingHandler
     {
         static readonly Task<Message> DummyResultObject = Task.FromResult((Message)null);
 
