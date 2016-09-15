@@ -166,10 +166,9 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         }
 #endif
 
-
-
         static IDeviceClientPipelineBuilder BuildPipeline()
         {
+            var transporthandlerFactory = new TransportHandlerFactory();
             IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
                 .With(ctx => new GateKeeperDelegatingHandler(ctx))
 #if !WINDOWS_UWP && !PCL
@@ -178,35 +177,12 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                 .With(ctx => new ErrorDelegatingHandler(ctx))
 #if !PCL
                 .With(ctx => new ProtocolRoutingDelegatingHandler(ctx))
-                .With(ctx => CreateTransportHandler(ctx));
+                .With(ctx => transporthandlerFactory.Create(ctx));
 #else
                 .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
 #endif
             return pipelineBuilder;
         }
-
-#if !PCL
-        static TransportHandler CreateTransportHandler(IPipelineContext context)
-        {
-            var connectionString = context.Get<IotHubConnectionString>(typeof(IotHubConnectionString).Name);
-            var transportSetting = context.Get<ITransportSettings>(typeof(ITransportSettings).Name);
-
-            switch (transportSetting.GetTransportType())
-            {
-                case TransportType.Amqp_WebSocket_Only:
-                case TransportType.Amqp_Tcp_Only:
-                    return new AmqpTransportHandler(context, connectionString, transportSetting as AmqpTransportSettings);
-                case TransportType.Http1:
-                    return new HttpTransportHandler(context, connectionString, transportSetting as Http1TransportSettings);
-#if !WINDOWS_UWP && !NETMF
-                case TransportType.Mqtt:
-                    return new MqttTransportHandler(context, connectionString, transportSetting as MqttTransportSettings);
-#endif
-                default:
-                    throw new InvalidOperationException("Unsupported Transport Setting {0}".FormatInvariant(transportSetting));
-            }
-        }
-#endif
 
         /// <summary>
         /// Create an Amqp DeviceClient from individual parameters

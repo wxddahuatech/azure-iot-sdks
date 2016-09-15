@@ -143,7 +143,9 @@
     <Compile Include="$(DeviceClientDir)\Transport\ProtocolRoutingDelegatingHandler.cs">
       <Link>ProtocolRoutingDelegatingHandler.cs</Link>
     </Compile>
+    <Compile Include="ITransportHandlerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransportHandlerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="Resources.resw" />
