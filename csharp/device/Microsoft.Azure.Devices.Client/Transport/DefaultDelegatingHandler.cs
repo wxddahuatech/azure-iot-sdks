@@ -16,7 +16,8 @@ namespace Microsoft.Azure.Devices.Client.Transport
     {
         static readonly Task<Message> DummyResultObject = Task.FromResult((Message)null);
 
-        int innerHandlerSet;
+        int innerHandlerInitializing;
+        int innerHandlerInitialized;
         IDelegatingHandler innerHandler;
 
         protected DefaultDelegatingHandler(IPipelineContext context)
@@ -32,9 +33,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             get
             {
-                if (Volatile.Read(ref this.innerHandler) == null && Interlocked.CompareExchange(ref this.innerHandlerSet, 1, 0) == 0)
+                if (Volatile.Read(ref this.innerHandlerInitialized) == 1)
                 {
-                    Volatile.Write(ref this.innerHandler, this.ContinuationFactory?.Invoke(this.Context));
+                    this.EnsureInnerHandlerInitialized();
                 }
                 return Volatile.Read(ref this.innerHandler);
             }
@@ -112,6 +113,18 @@ namespace Microsoft.Azure.Devices.Client.Transport
         ~DefaultDelegatingHandler()
         {
             this.Dispose(false);
+        }
+
+        void EnsureInnerHandlerInitialized()
+        {
+            if (Interlocked.CompareExchange(ref this.innerHandlerInitializing, 1, 0) == 0)
+            {
+                IDelegatingHandler result = this.ContinuationFactory?.Invoke(this.Context);
+                Volatile.Write(ref this.innerHandler, result);
+                Volatile.Write(ref this.innerHandlerInitialized, 1);
+            }
+
+            SpinWait.SpinUntil(() => Volatile.Read(ref this.innerHandlerInitialized) != 1);
         }
     }
 }

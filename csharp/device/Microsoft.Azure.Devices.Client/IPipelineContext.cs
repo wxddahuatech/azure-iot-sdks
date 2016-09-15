@@ -21,6 +21,6 @@ namespace Microsoft.Azure.Devices.Client
 #endif
         T Get<T>(string key) where T : class;
 
-        T Get<T>(string key, T defaultValue);
+        bool TryGet<T>(string key, out T value) where T : struct;
     }
 }

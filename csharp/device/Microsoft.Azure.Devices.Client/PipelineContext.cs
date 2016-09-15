@@ -26,9 +26,17 @@ namespace Microsoft.Azure.Devices.Client
 
         public T Get<T>(T defaultValue)
         {
-            return this.Get(typeof(T).Name, defaultValue);
+            object value;
+            if (this.context.TryGetValue(typeof(T).Name, out value))
+            {
+                return (T)value;
+            }
+            return defaultValue;
         }
 
+#if WINDOWS_UWP
+        [Windows.Foundation.Metadata.DefaultOverload]
+#endif
         public T Get<T>(string key) where T : class
         {
             object value;
@@ -38,17 +46,17 @@ namespace Microsoft.Azure.Devices.Client
             }
             return null;
         }
-#if WINDOWS_UWP
-        [Windows.Foundation.Metadata.DefaultOverload]
-#endif
-        public T Get<T>(string key, T defaultValue)
+
+        public bool TryGet<T>(string key, out T value) where T: struct 
         {
-            object value;
-            if (this.context.TryGetValue(key, out value))
+            object data;
+            if (this.context.TryGetValue(key, out data))
             {
-                return value is T ? (T)value : defaultValue;
+                value = (T)data;
+                return true;
             }
-            return defaultValue;
+            value = default(T);
+            return true;
         }
     }
 }
