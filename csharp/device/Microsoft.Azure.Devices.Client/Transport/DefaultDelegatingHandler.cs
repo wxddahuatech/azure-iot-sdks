@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         {
             get
             {
-                if (Volatile.Read(ref this.innerHandlerInitialized) == 1)
+                if (Volatile.Read(ref this.innerHandlerInitialized) == 0)
                 {
                     this.EnsureInnerHandlerInitialized();
                 }
@@ -123,8 +123,10 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 Volatile.Write(ref this.innerHandler, result);
                 Volatile.Write(ref this.innerHandlerInitialized, 1);
             }
-
-            SpinWait.SpinUntil(() => Volatile.Read(ref this.innerHandlerInitialized) != 1);
+            else
+            {
+                SpinWait.SpinUntil(() => Volatile.Read(ref this.innerHandlerInitialized) != 1);
+            }
         }
     }
 }
