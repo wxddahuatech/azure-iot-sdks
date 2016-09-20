@@ -12,7 +12,11 @@
 #include "iothubtransportamqp_websockets.h"
 #include "../../../certs/certs.h"
 
-static const char* connectionString = "[device connection string]";
+#ifdef MBED_BUILD_TIMESTAMP
+#include "certs.h"
+#endif // MBED_BUILD_TIMESTAMP
+
+static const char* connectionString = "HostName=iot-sdks-test.azure-devices.net;DeviceId=dcristo_xxx;SharedAccessKey=rHG7UOI+F38kUpD5IQpZhFoLP99b4SzzXUwkN2T2BU0=";
 static int callbackCounter;
 
 
