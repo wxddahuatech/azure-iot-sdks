@@ -26,20 +26,26 @@ namespace Microsoft.Azure.Devices.Client
                 throw new InvalidOperationException("Pipeline is not setup");
             }
 
-            for (int i = 0; i < this.pipeline.Count - 1; i++)
-            {
-                ContinuationFactory<IDelegatingHandler> current = this.pipeline[i];
-                ContinuationFactory<IDelegatingHandler> next = this.pipeline[i + 1];
-                this.pipeline[i] = ctx =>
-                {
-                    IDelegatingHandler delegatingHandler = current(ctx);
-                    delegatingHandler.ContinuationFactory = next;
-                    return delegatingHandler;
-                };
-            }
-
-            IDelegatingHandler root = this.pipeline[0](context);
+            IDelegatingHandler root = this.WrapContinuationFactory(0)(context);
             return root;
+        }
+
+        ContinuationFactory<IDelegatingHandler> WrapContinuationFactory(int currentId)
+        {
+            ContinuationFactory<IDelegatingHandler> current = this.pipeline[currentId];
+            if (currentId == this.pipeline.Count - 1)
+            {
+                return current;
+            }
+            ContinuationFactory<IDelegatingHandler> next = this.WrapContinuationFactory(currentId + 1);
+            ContinuationFactory<IDelegatingHandler> currentHandlerFactory = current;
+            current = ctx =>
+            {
+                IDelegatingHandler delegatingHandler = currentHandlerFactory(ctx);
+                delegatingHandler.ContinuationFactory = next;
+                return delegatingHandler;
+            };
+            return current;
         }
     }
 }
