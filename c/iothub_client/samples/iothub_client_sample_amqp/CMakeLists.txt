@@ -11,6 +11,7 @@ endif()
 
 set(iothub_client_sample_amqp_c_files
 	iothub_client_sample_amqp.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../certs/certs.c
 )
 
 set(iothub_client_sample_amqp_h_files

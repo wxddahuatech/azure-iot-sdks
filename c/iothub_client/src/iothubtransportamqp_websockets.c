@@ -4,6 +4,7 @@
 #include "iothubtransportamqp_websockets.h"
 #include "azure_c_shared_utility/wsio.h"
 #include "iothubtransportamqp.c"
+#include "../../../certs/certs.h"
 
 #define DEFAULT_WS_PROTOCOL_NAME "AMQPWSB10"
 #define DEFAULT_WS_RELATIVE_PATH "/$iothub/websocket"
@@ -25,7 +26,7 @@ XIO_HANDLE getWebSocketsIOTransport(const char* fqdn, int port)
         TLSIO_CONFIG tlsio_config;
         XIO_HANDLE tlsio;
 
-        tlsio_config.hostname = "iot-sdks-test.azure-devices.net";
+        tlsio_config.hostname = fqdn;
         tlsio_config.port = port;
         tlsio = xio_create(tlsio_interface, &tlsio_config);
         if (tlsio == NULL)
@@ -35,6 +36,11 @@ XIO_HANDLE getWebSocketsIOTransport(const char* fqdn, int port)
         }
         else
         {
+            if (xio_setoption(tlsio, "TrustedCerts", certificates) != IOTHUB_CLIENT_OK)
+            {
+                printf("failure to set option \"TrustedCerts\"\r\n");
+            }
+
             ws_io_config.hostname = fqdn;
             ws_io_config.underlying_io = tlsio;
 
