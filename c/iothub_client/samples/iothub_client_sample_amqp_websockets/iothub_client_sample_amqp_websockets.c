@@ -10,13 +10,15 @@
 #include "iothub_client.h"
 #include "iothub_message.h"
 #include "iothubtransportamqp_websockets.h"
+#include "iothubtransportamqp.h"
 #include "../../../certs/certs.h"
 
 #ifdef MBED_BUILD_TIMESTAMP
 #include "certs.h"
 #endif // MBED_BUILD_TIMESTAMP
 
-static const char* connectionString = "HostName=iot-sdks-test.azure-devices.net;DeviceId=dcristo_xxx;SharedAccessKey=rHG7UOI+F38kUpD5IQpZhFoLP99b4SzzXUwkN2T2BU0=";
+static const char* connectionString =
+"HostName=iot-sdks-test.azure-devices.net;DeviceId=dcristo_xxx;SharedAccessKey=rHG7UOI+F38kUpD5IQpZhFoLP99b4SzzXUwkN2T2BU0=";
 static int callbackCounter;
 
 
@@ -140,6 +142,11 @@ void iothub_client_sample_amqp_websockets_run(void)
         if (IoTHubClient_SetOption(iotHubClientHandle, "TrustedCerts", certificates) != IOTHUB_CLIENT_OK)
         {
             printf("failure to set option \"TrustedCerts\"\r\n");
+        }
+        bool x = true;
+        if (IoTHubClient_SetOption(iotHubClientHandle, "logtrace", &x) != IOTHUB_CLIENT_OK)
+        {
+            printf("failure to set option \"logtrace\"\r\n");
         }
 
         /* Setting Message call back, so we can receive Commands. */
