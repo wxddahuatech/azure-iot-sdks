@@ -56,10 +56,12 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task ErrorHandler_NoErrors_Success()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
             innerHandler.OpenAsync(Arg.Is(false)).Returns(TaskConstants.Completed);
             innerHandler.SendEventAsync(Arg.Any<Message>()).Returns(TaskConstants.Completed);
-            var sut = new ErrorDelegatingHandler(() => innerHandler);
+            var sut = new ErrorDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandler;
 
             //emulate Gatekeeper behaviour: it opens the channel for us
             await sut.OpenAsync(false);
@@ -169,12 +171,13 @@ namespace Microsoft.Azure.Devices.Client.Test
         static async Task OperationAsync_ExceptionThrownAndThenSucceed_OperationSuccessfullyCompleted(Func<IDelegatingHandler, Task<Message>> mockSetup, Func<IDelegatingHandler, Task<Message>> act, Func<IDelegatingHandler, Task<Message>> assert, Type thrownExceptionType, Type expectedExceptionType, bool reopenExpected)
         {
             int ctorCallCounter = 0;
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
-            var sut = new ErrorDelegatingHandler(() =>
-            {
+            var sut = new ErrorDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => {
                 ctorCallCounter++;
                 return innerHandler;
-            });
+            };
 
             //initial OpenAsync to emulate Gatekeeper behaviour
             innerHandler.OpenAsync(Arg.Is(false)).Returns(TaskConstants.Completed);
@@ -211,12 +214,13 @@ namespace Microsoft.Azure.Devices.Client.Test
         static async Task OperationAsync_ExceptionThrownAndThenSucceed_OperationSuccessfullyCompleted(Func<IDelegatingHandler, Task> mockSetup, Func<IDelegatingHandler, Task> act, Func<IDelegatingHandler, Task> assert, Type thrownExceptionType, Type expectedExceptionType, bool reopenExpected)
         {
             int ctorCallCounter = 0;
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
-            var sut = new ErrorDelegatingHandler(() =>
-            {
+            var sut = new ErrorDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => {
                 ctorCallCounter++;
                 return innerHandler;
-            });
+            };
 
             //initial OpenAsync to emulate Gatekeeper behaviour
             innerHandler.OpenAsync(Arg.Is(false)).Returns(TaskConstants.Completed);
@@ -253,12 +257,13 @@ namespace Microsoft.Azure.Devices.Client.Test
         static async Task OpenAsync_ExceptionThrownAndThenSucceed_SuccessfullyOpened(Func<IDelegatingHandler, Task> mockSetup, Func<IDelegatingHandler, Task> act, Func<IDelegatingHandler, Task> assert, Type thrownExceptionType, Type expectedExceptionType)
         {
             int ctorCallCounter = 0;
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
-            var sut = new ErrorDelegatingHandler(() =>
-            {
+            var sut = new ErrorDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => {
                 ctorCallCounter++;
                 return innerHandler;
-            });
+            };
 
             //set initial operation result that throws
 

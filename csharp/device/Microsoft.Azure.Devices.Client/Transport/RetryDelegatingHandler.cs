@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
     public class RetryDelegatingHandler : DefaultDelegatingHandler
     {
         const int DefaultRetryCount = 75;
-        const int OpenRetryCount = 75;
+        public static int RetryCount = DefaultRetryCount;
         const int UndeterminedPosition = -1;
         const string StopRetrying = "StopRetrying";
 
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
         public RetryDelegatingHandler(IPipelineContext context)
             : base(context)
         {
-            this.retryPolicy = new RetryPolicy(new IotHubTransientErrorIgnoreStrategy(), new IotHubRuntimeOperationRetryStrategy(DefaultRetryCount));
+            this.retryPolicy = new RetryPolicy(new IotHubTransientErrorIgnoreStrategy(), new IotHubRuntimeOperationRetryStrategy(RetryCount));
         }
 
         public override async Task SendEventAsync(Message message)

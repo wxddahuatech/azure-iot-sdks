@@ -21,11 +21,14 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task TransportRouting_FirstTrySucceed_Open()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var amqpTransportSettings = Substitute.For<ITransportSettings>();
             var mqttTransportSettings = Substitute.For<ITransportSettings>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
             innerHandler.OpenAsync(Arg.Is(false)).Returns(TaskConstants.Completed);
-            var sut = new RoutingDelegatingHandler((cs, ts) => innerHandler, null, new [] {amqpTransportSettings, mqttTransportSettings} );
+            contextMock.Get<ITransportSettings[]>().Returns(new[] { amqpTransportSettings, mqttTransportSettings });
+            var sut = new ProtocolRoutingDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandler;
 
             await sut.OpenAsync(false);
             
@@ -38,6 +41,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task TransportRouting_TryOpenFailedWithUnsupportedException_FailOnFirstTry()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var amqpTransportSettings = Substitute.For<ITransportSettings>();
             var mqttTransportSettings = Substitute.For<ITransportSettings>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
@@ -49,7 +53,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 await Task.Yield();
                 throw new InvalidOperationException();
             });
-            var sut = new RoutingDelegatingHandler((cs, ts) => innerHandler, null, new [] {amqpTransportSettings, mqttTransportSettings} );
+            contextMock.Get<ITransportSettings[]>().Returns(new[] { amqpTransportSettings, mqttTransportSettings });
+            var sut = new ProtocolRoutingDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandler;
 
             await sut.OpenAsync(Arg.Is(false)).ExpectedAsync<InvalidOperationException>();
 
@@ -64,6 +70,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task TransportRouting_TryOpenFailedWithSupportedExceptionTwoTimes_Fail()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var amqpTransportSettings = Substitute.For<ITransportSettings>();
             var mqttTransportSettings = Substitute.For<ITransportSettings>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
@@ -75,8 +82,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 await Task.Yield();
                 throw new TimeoutException();
             });
-            var sut = new RoutingDelegatingHandler((cs, ts) => innerHandler, null, new [] {amqpTransportSettings, mqttTransportSettings} );
-
+            contextMock.Get<ITransportSettings[]>().Returns(new[] { amqpTransportSettings, mqttTransportSettings });
+            var sut = new ProtocolRoutingDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandler;
             await sut.OpenAsync(Arg.Is(false)).ExpectedAsync<IotHubCommunicationException>();
 
             await innerHandler.Received(2).CloseAsync();
@@ -100,6 +108,7 @@ namespace Microsoft.Azure.Devices.Client.Test
 
         static async Task TransportRouting_TryOpenFailedWithSupportedExceptionFirstTimes_SuccessOnSecondTry(Func<Exception> exceptionFactory)
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var amqpTransportSettings = Substitute.For<ITransportSettings>();
             var mqttTransportSettings = Substitute.For<ITransportSettings>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
@@ -114,7 +123,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                     throw exceptionFactory();
                 }
             });
-            var sut = new RoutingDelegatingHandler((cs, ts) => innerHandler, null, new[] { amqpTransportSettings, mqttTransportSettings });
+            contextMock.Get<ITransportSettings[]>().Returns(new[] { amqpTransportSettings, mqttTransportSettings });
+            var sut = new ProtocolRoutingDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandler;
 
             await sut.OpenAsync(Arg.Is(false));
 
