@@ -1,3 +1,7 @@
+# IMPORTANT CHANGE
+**As we released a new public preview for Azure IoT Hub Device Management, we moved the related code and samples that were in this branch to a different repository. You can now find all Device Twins, Device Methods, and Device Management related code in this new repository: https://github.com/azure/azure-iot-sdks-preview.**
+**The current dmpreview branch should be considered as obsolete**
+
 # Microsoft Azure IoT SDKs
 
 This repository contains both IoT device SDKs and IoT service SDKs. Device SDKs enable you connect client devices to Azure IoT Hub. Service SDKs enable you to manage your IoT Hub service instance.
