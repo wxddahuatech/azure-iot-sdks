@@ -14,6 +14,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
     /// <summary>
     /// Contains the implementation of methods that a device can use to send messages to and receive from the service.
     /// </summary>
+#if !WINDOWS_UWP
+    public
+#endif
     sealed class GateKeeperDelegatingHandler : DefaultDelegatingHandler
     {
         bool open;
@@ -21,9 +24,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
         volatile TaskCompletionSource<object> openTaskCompletionSource;
         readonly object thisLock;
 
-        public GateKeeperDelegatingHandler(IDelegatingHandler innerHandler)
+        public GateKeeperDelegatingHandler(IPipelineContext context)
+            : base(context)
         {
-            this.InnerHandler = innerHandler;
             this.thisLock = new object();
             this.openTaskCompletionSource = new TaskCompletionSource<object>(this);
         }

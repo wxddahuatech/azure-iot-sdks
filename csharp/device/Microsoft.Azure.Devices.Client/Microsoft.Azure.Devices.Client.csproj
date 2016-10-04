@@ -202,6 +202,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Transport\TransportHandlerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AmqpConnectionPoolSettings.cs" />
@@ -224,8 +225,14 @@
     <Compile Include="Common\UrlEncodedDictionarySerializer.cs" />
     <Compile Include="DeviceAuthenticationWithX509Certificate.cs" />
     <Compile Include="DotNetHelpers.cs" />
-    <Compile Include="IDelegatingHandler.cs" />
+    <Compile Include="DeviceClientPipelineBuilder.cs" />
+    <Compile Include="IContinuationProvider.cs" />
+    <Compile Include="IDeviceClientPipelineBuilder.cs" />
     <Compile Include="IotHubClientWebSocket.cs" />
+    <Compile Include="IPipelineContext.cs" />
+    <Compile Include="PipelineContext.cs" />
+    <Compile Include="Transport\DefaultDelegatingHandler.cs" />
+    <Compile Include="IDelegatingHandler.cs" />
     <Compile Include="IotHubConnection.cs" />
     <Compile Include="IotHubDeviceMuxConnection.cs" />
     <Compile Include="IotHubDeviceScopeConnectionPool.cs" />
@@ -238,6 +245,7 @@
     <Compile Include="Transport\FileUploadNotificationResponse.cs" />
     <Compile Include="Transport\FileUploadRequest.cs" />
     <Compile Include="Transport\FileUploadResponse.cs" />
+    <Compile Include="Transport\ITransportHandlerFactory.cs" />
     <Compile Include="Transport\Mqtt\ChannelMessageProcessingException.cs" />
     <Compile Include="Transport\Mqtt\ClientWebSocketChannel.cs" />
     <Compile Include="Transport\Mqtt\ClientWebSocketChannelConfig.cs" />
@@ -259,8 +267,8 @@
     <Compile Include="Transport\Mqtt\TransientErrorIgnoreStrategy.cs" />
     <Compile Include="Transport\Mqtt\Util.cs" />
     <Compile Include="Transport\Mqtt\WillMessage.cs" />
+    <Compile Include="Transport\ProtocolRoutingDelegatingHandler.cs" />
     <Compile Include="Transport\RetryDelegatingHandler.cs" />
-    <Compile Include="Transport\RoutingDelegatingHandler.cs" />
     <Compile Include="Transport\TransportHandler.cs" />
   </ItemGroup>
   <ItemGroup>

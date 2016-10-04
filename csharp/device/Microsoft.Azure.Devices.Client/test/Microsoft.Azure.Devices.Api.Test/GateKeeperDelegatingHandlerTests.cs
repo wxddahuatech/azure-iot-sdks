@@ -22,10 +22,12 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task OpenAsync_InnerCompleted_SutIsOpen()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(true).Returns(t => TaskConstants.Completed);
 
-            var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+            var sut = new GateKeeperDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
             await sut.OpenAsync();
         }
 
@@ -35,6 +37,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task ImplicitOpen_SubjWasNotOpen_SubjIsOpen()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(false).Returns(t => TaskConstants.Completed);
             innerHandlerMock.SendEventAsync(Arg.Any<Message>()).Returns(t => TaskConstants.Completed);
@@ -58,7 +61,8 @@ namespace Microsoft.Azure.Devices.Client.Test
 
             foreach (Func<IDelegatingHandler, Task> action in actions)
             {
-                var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+                var sut = new GateKeeperDelegatingHandler(contextMock);
+                sut.ContinuationFactory = c => innerHandlerMock;
                 await action(sut);
             }
 
@@ -71,10 +75,12 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task OpenAsync_ClosedCannotBeReopened_Throws()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.CloseAsync().Returns(t => TaskConstants.Completed);
 
-            var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+            var sut = new GateKeeperDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
             await sut.CloseAsync();
 
             await ((Func<Task>)sut.OpenAsync).ExpectedAsync<ObjectDisposedException>();
@@ -86,6 +92,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task OpenAsync_TwoCallers_OnlyOneOpenCalled()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var tcs = new TaskCompletionSource();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             int callCounter = 0;
@@ -95,7 +102,8 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return tcs.Task;
             });
 
-            var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+            var sut = new GateKeeperDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
             Task firstOpen = sut.OpenAsync();
             Task secondOpen = sut.OpenAsync();
             tcs.Complete();
@@ -110,12 +118,14 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task OpenAsync_InnerFailed_SutIsOpenAndCanBeReopen()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(Arg.Is(true)).Returns(ci =>
             {
                 throw new IOException();
             });
-            var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+            var sut = new GateKeeperDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
 
             await ((Func<Task>)sut.OpenAsync).ExpectedAsync<IOException>();
 
@@ -130,11 +140,13 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task OpenAsync_InnerCancelled_SutIsOpenAndCanBeReopen()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var tcs = new TaskCompletionSource();
             tcs.SetCanceled();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(true).Returns(tcs.Task);
-            var sut = new GateKeeperDelegatingHandler(innerHandlerMock);
+            var sut = new GateKeeperDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
 
             await sut.OpenAsync().ExpectedAsync<TaskCanceledException>();
 

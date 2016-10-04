@@ -5,23 +5,44 @@ namespace Microsoft.Azure.Devices.Client.Transport
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Devices.Client.Common;
 
+#if !WINDOWS_UWP
+    public
+#endif
     abstract class DefaultDelegatingHandler : IDelegatingHandler
     {
         static readonly Task<Message> DummyResultObject = Task.FromResult((Message)null);
 
-        public IDelegatingHandler InnerHandler { get; protected set; }
+        int innerHandlerInitializing;
+        int innerHandlerInitialized;
+        IDelegatingHandler innerHandler;
 
-        protected DefaultDelegatingHandler()
-            : this(null)
+        protected DefaultDelegatingHandler(IPipelineContext context)
         {
+            this.Context = context;
         }
 
-        protected DefaultDelegatingHandler(IDelegatingHandler innerHandler)
+        public IPipelineContext Context { get; protected set; }
+
+        public ContinuationFactory<IDelegatingHandler> ContinuationFactory { get; set; }
+
+        public IDelegatingHandler InnerHandler
         {
-            this.InnerHandler = innerHandler;
+            get
+            {
+                if (Volatile.Read(ref this.innerHandlerInitialized) == 0)
+                {
+                    this.EnsureInnerHandlerInitialized();
+                }
+                return Volatile.Read(ref this.innerHandler);
+            }
+            protected set
+            {
+                Volatile.Write(ref this.innerHandler, value);
+            }
         }
 
         public virtual Task OpenAsync(bool explicitOpen)
@@ -80,7 +101,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         protected virtual void Dispose(bool disposing)
         {
-            this.InnerHandler?.Dispose();
+            this.innerHandler?.Dispose();
         }
 
         public void Dispose()
@@ -92,6 +113,20 @@ namespace Microsoft.Azure.Devices.Client.Transport
         ~DefaultDelegatingHandler()
         {
             this.Dispose(false);
+        }
+
+        void EnsureInnerHandlerInitialized()
+        {
+            if (Interlocked.CompareExchange(ref this.innerHandlerInitializing, 1, 0) == 0)
+            {
+                IDelegatingHandler result = this.ContinuationFactory?.Invoke(this.Context);
+                Volatile.Write(ref this.innerHandler, result);
+                Volatile.Write(ref this.innerHandlerInitialized, 1);
+            }
+            else
+            {
+                SpinWait.SpinUntil(() => Volatile.Read(ref this.innerHandlerInitialized) != 1);
+            }
         }
     }
 }

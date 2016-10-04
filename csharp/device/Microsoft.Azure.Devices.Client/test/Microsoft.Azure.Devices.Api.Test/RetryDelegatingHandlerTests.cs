@@ -31,6 +31,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(true).Returns(t =>
             {
@@ -43,7 +44,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return TaskConstants.Completed;
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.OpenAsync(true);
 
             Assert.AreEqual(2, callCounter);
@@ -57,6 +60,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             var message = new Message(new MemoryStream(new byte[] {1,2,3}));
             innerHandlerMock.SendEventAsync(Arg.Is(message)).Returns(t =>
@@ -74,7 +78,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return TaskConstants.Completed;
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.SendEventAsync(message);
 
             Assert.AreEqual(2, callCounter);
@@ -88,6 +94,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             var memoryStream = new NotSeekableStream(new byte[] {1,2,3});
             var message = new Message(memoryStream);
@@ -101,7 +108,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 throw new IotHubClientTransientException("");
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.SendEventAsync(message).ExpectedAsync<IotHubClientTransientException>();
 
             Assert.AreEqual(callCounter, 1);
@@ -115,6 +124,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             var message = new Message(new MemoryStream(new byte[] {1,2,3}));
             IEnumerable<Message> messages = new[] { message };
@@ -133,7 +143,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return TaskConstants.Completed;
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.SendEventAsync(messages);
 
             Assert.AreEqual(2, callCounter);
@@ -147,6 +159,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             var memoryStream = new NotSeekableStream(new byte[] {1,2,3});
             var message = new Message(memoryStream);
@@ -161,7 +174,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 throw new IotHubClientTransientException("");
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.SendEventAsync(messages).ExpectedAsync<IotHubClientTransientException>();
 
             Assert.AreEqual(callCounter, 1);
@@ -175,6 +190,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             var message = new Message(new MemoryStream(new byte[] {1,2,3}));
             innerHandlerMock.SendEventAsync(Arg.Is(message)).Returns(t =>
@@ -191,7 +207,9 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return TaskConstants.Completed;
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
+
             await sut.SendEventAsync(message);
 
             Assert.AreEqual(callCounter, 2);
@@ -205,6 +223,7 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             int callCounter = 0;
 
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(true).Returns(t =>
             {
@@ -217,7 +236,8 @@ namespace Microsoft.Azure.Devices.Client.Test
                 return TaskConstants.Completed;
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
 
             await sut.OpenAsync(true).ExpectedAsync<InvalidOperationException>();
 
@@ -229,13 +249,15 @@ namespace Microsoft.Azure.Devices.Client.Test
         [TestCategory("Owner [mtuchkov]")]
         public async Task Retry_TransientErrorThrownAfterNumberOfRetries_Throws()
         {
+            var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             innerHandlerMock.OpenAsync(Arg.Is(true)).Returns(t =>
             {
                 throw new IotHubClientTransientException("");
             });
 
-            var sut = new RetryDelegatingHandler(innerHandlerMock);
+            var sut = new RetryDelegatingHandler(contextMock);
+            sut.ContinuationFactory = c => innerHandlerMock;
 
             await sut.OpenAsync(true).ExpectedAsync<IotHubClientTransientException>();
         }

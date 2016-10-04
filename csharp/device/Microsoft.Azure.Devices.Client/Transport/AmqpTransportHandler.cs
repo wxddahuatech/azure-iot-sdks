@@ -28,8 +28,8 @@ namespace Microsoft.Azure.Devices.Client.Transport
         int eventsDeliveryTag;
         int closed;
 
-        public AmqpTransportHandler(IotHubConnectionString connectionString, AmqpTransportSettings transportSettings)
-            : base(transportSettings)
+        public AmqpTransportHandler(IPipelineContext context, IotHubConnectionString connectionString, AmqpTransportSettings transportSettings)
+            :base(context, transportSettings)
         {
             TransportType transportType = transportSettings.GetTransportType();
             this.deviceId = connectionString.DeviceId;
@@ -53,45 +53,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             this.iotHubConnectionString = connectionString;
         }
 
-        /// <summary>
-        /// Create a DeviceClient from individual parameters
-        /// </summary>
-        /// <param name="hostname">The fully-qualified DNS hostname of IoT Hub</param>
-        /// <param name="authenticationMethod">The authentication method that is used</param>
-        /// <returns>DeviceClient</returns>
-        public static AmqpTransportHandler Create(string hostname, IAuthenticationMethod authenticationMethod)
-        {
-            if (hostname == null)
-            {
-                throw new ArgumentNullException(nameof(hostname));
-            }
-
-            if (authenticationMethod == null)
-            {
-                throw new ArgumentNullException(nameof(authenticationMethod));
-            }
-
-            IotHubConnectionStringBuilder connectionStringBuilder = IotHubConnectionStringBuilder.Create(hostname, authenticationMethod);
-            return CreateFromConnectionString(connectionStringBuilder.ToString());
-        }
-
-        /// <summary>
-        /// Create DeviceClient from the specified connection string
-        /// </summary>
-        /// <param name="connectionString">Connection string for the IoT hub</param>
-        /// <returns>DeviceClient</returns>
-        public static AmqpTransportHandler CreateFromConnectionString(string connectionString)
-        {
-            if (connectionString == null)
-            {
-                throw new ArgumentNullException(nameof(connectionString));
-            }
-
-            IotHubConnectionString iotHubConnectionString = IotHubConnectionString.Parse(connectionString);
-            return new AmqpTransportHandler(iotHubConnectionString, new AmqpTransportSettings(TransportType.Amqp_Tcp_Only));
-        }
-
-        public IotHubConnection IotHubConnection { get; }
+        internal IotHubConnection IotHubConnection { get; }
 
         public override async Task OpenAsync(bool explicitOpen)
         {

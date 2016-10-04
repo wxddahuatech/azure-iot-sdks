@@ -1,13 +1,17 @@
-﻿namespace Microsoft.Azure.Devices.Client
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Azure.Devices.Client
 {
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    interface IDelegatingHandler: IDisposable
+#if !WINDOWS_UWP
+    public
+#endif
+    interface IDelegatingHandler : IContinuationProvider<IDelegatingHandler>, IDisposable
     {
-        IDelegatingHandler InnerHandler { get; }
-
         Task AbandonAsync(string lockToken);
         Task CloseAsync();
         Task CompleteAsync(string lockToken);

@@ -95,7 +95,7 @@ namespace Microsoft.Azure.Devices.Client
      |           +--inherits->               <--inherits----+                |
      |           |           +-------^-------+              |                |
      |           |                   |inherits              |                |
-     |           |                   |                      |                |
+     |           |     (#if !UWP)    |                      |                |
 +------------+       +---+---------+      +--+----------+       +---+--------+       +--------------+
 |            |       |             |      |             |       |            |       | <<abstract>> |
 | GateKeeper |  use  | Retry       | use  |  Error      |  use  | Routing    |  use  | Transport    |
@@ -107,25 +107,25 @@ namespace Microsoft.Azure.Devices.Client
 |  Close     |       |  SendEvent  |      |   SendEvent |       |            |       |              |
 |            |       |  SendEvents |      |   SendEvents|       +------------+       +--^--^---^----+
 +------------+       |  Receive    |      |   Receive   |                               |  |   |
-             |  Reject     |      |   Reject    |                               |  |   |
-             |  Abandon    |      |   Abandon   |                               |  |   |
-             |  Complete   |      |   Complete  |                               |  |   |
-             |             |      |             |                               |  |   |
-             +-------------+      +-------------+     +-------------+-+inherits-+  |   +---inherits-+-------------+
-                                                      |             |              |                |             |
-                                                      | AMQP        |              inherits         | HTTP        |
-                                                      | Transport   |              |                | Transport   |
-                                                      | Handler     |          +---+---------+      | Handler     |
-                                                      |             |          |             |      |             |
-                                                      | overrides:  |          | MQTT        |      | overrides:  |
-                                                      |  everything |          | Transport   |      |  everything |
-                                                      |             |          | Handler     |      |             |
-                                                      +-------------+          |             |      +-------------+
-                                                                               | overrides:  |
-                                                                               |  everything |
-                                                                               |             |
-                                                                               +-------------+
-
+                     |  Reject     |      |   Reject    |                               |  |   |
+                     |  Abandon    |      |   Abandon   |                               |  |   |
+                     |  Complete   |      |   Complete  |                               |  |   |
+                     |             |      |             |                               |  |   |
+                     +-------------+      +-------------+     +-------------+-+inherits-+  |   +---inherits-+-------------+
+                                                              |             |              |                |             |
+                                                              | AMQP        |              inherits         | HTTP        |
+                                                              | Transport   |              |                | Transport   |
+                                                              | Handler     |          +---+---------+      | Handler     |
+                                                              |             |          |             |      |             |
+                                                              | overrides:  |          | MQTT        |      | overrides:  |
+                                                              |  everything |          | Transport   |      |  everything |
+                                                              |             |          | Handler     |      |             |
+                                                              +-------------+          |             |      +-------------+
+                                                                                       | overrides:  |
+                                                                                       |  everything |
+                                                                                       |             |
+                                                                                       +-------------+
+TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have to many overloads in most of the classes.
 */
     /// <summary>
     /// Contains methods that a device can use to send messages to and receive from the service.
@@ -149,49 +149,55 @@ namespace Microsoft.Azure.Devices.Client
         internal IDelegatingHandler InnerHandler { get; set; }
 
 #if !PCL
-        DeviceClient(IotHubConnectionString iotHubConnectionString, ITransportSettings[] transportSettings)
+        DeviceClient(IotHubConnectionString iotHubConnectionString, ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             this.iotHubConnectionString = iotHubConnectionString;
 
-#if !WINDOWS_UWP
-            var innerHandler = new RetryDelegatingHandler(
-                new ErrorDelegatingHandler(
-                    () => new RoutingDelegatingHandler(this.CreateTransportHandler, iotHubConnectionString, transportSettings)));
-#else
-            // UWP does not support retry yet. We need to make the underlying Message stream accessible internally on UWP
-            // to be sure that either the stream has not been read or it is seekable to safely retry operation
-            var innerHandler = new ErrorDelegatingHandler(
-                () => new RoutingDelegatingHandler(this.CreateTransportHandler, iotHubConnectionString, transportSettings));
-#endif
-            this.InnerHandler = new GateKeeperDelegatingHandler(innerHandler);
-        }
+            var pipelineContext = new PipelineContext();
+            pipelineContext.Set(transportSettings);
+            pipelineContext.Set(iotHubConnectionString);
 
-        DefaultDelegatingHandler CreateTransportHandler(IotHubConnectionString iotHubConnectionString, ITransportSettings transportSetting)
-        {
-            switch (transportSetting.GetTransportType())
-            {
-                case TransportType.Amqp_WebSocket_Only:
-                case TransportType.Amqp_Tcp_Only:
-                    return new AmqpTransportHandler(iotHubConnectionString, transportSetting as AmqpTransportSettings);
-                case TransportType.Http1:
-                    return new HttpTransportHandler(iotHubConnectionString, transportSetting as Http1TransportSettings);
-#if !WINDOWS_UWP && !NETMF
-                case TransportType.Mqtt_WebSocket_Only:
-                case TransportType.Mqtt_Tcp_Only:
-                    return new MqttTransportHandler(iotHubConnectionString, transportSetting as MqttTransportSettings);
-#endif
-                default:
-                    throw new InvalidOperationException("Unsupported Transport Setting {0}".FormatInvariant(transportSetting));
-            }
+            IDelegatingHandler innerHandler = pipelineBuilder.Build(pipelineContext);
+
+            this.InnerHandler = innerHandler;
         }
 
 #else
         DeviceClient(IotHubConnectionString iotHubConnectionString)
         {
-            this.InnerHandler = new GateKeeperDelegatingHandler(
-                new ErrorDelegatingHandler(() => new HttpTransportHandler(iotHubConnectionString)));
+            this.iotHubConnectionString = iotHubConnectionString;
+
+            var pipelineContext = new PipelineContext();
+            pipelineContext.Set(iotHubConnectionString);
+
+            IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
+                .With(ctx => new GateKeeperDelegatingHandler(ctx))
+                .With(ctx => new ErrorDelegatingHandler(ctx))
+                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
+
+            this.InnerHandler = pipelineBuilder.Build(pipelineContext);
         }
 #endif
+
+        static IDeviceClientPipelineBuilder BuildPipeline()
+        {
+#if !PCL
+            var transporthandlerFactory = new TransportHandlerFactory();
+#endif
+            IDeviceClientPipelineBuilder pipelineBuilder = new DeviceClientPipelineBuilder()
+                .With(ctx => new GateKeeperDelegatingHandler(ctx))
+#if !WINDOWS_UWP && !PCL
+                .With(ctx => new RetryDelegatingHandler(ctx))
+#endif
+                .With(ctx => new ErrorDelegatingHandler(ctx))
+#if !PCL
+                .With(ctx => new ProtocolRoutingDelegatingHandler(ctx))
+                .With(ctx => transporthandlerFactory.Create(ctx));
+#else
+                .With(ctx => new HttpTransportHandler(ctx, ctx.Get<IotHubConnectionString>(), ctx.Get<ITransportSettings>() as Http1TransportSettings));
+#endif
+            return pipelineBuilder;
+        }
 
         /// <summary>
         /// Create an Amqp DeviceClient from individual parameters
@@ -230,7 +236,7 @@ namespace Microsoft.Azure.Devices.Client
                 throw new ArgumentNullException(nameof(authenticationMethod));
             }
 
-            var connectionStringBuilder = IotHubConnectionStringBuilder.Create(hostname, authenticationMethod);
+            IotHubConnectionStringBuilder connectionStringBuilder = IotHubConnectionStringBuilder.Create(hostname, authenticationMethod);
 
 #if !WINDOWS_UWP && !PCL && !NETMF
             if (authenticationMethod is DeviceAuthenticationWithX509Certificate)
@@ -325,6 +331,22 @@ namespace Microsoft.Azure.Devices.Client
         /// <returns>DeviceClient</returns>
         public static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType)
         {
+            return CreateFromConnectionString(connectionString, transportType, null);
+        }
+
+        /// <summary>
+        /// Create DeviceClient from the specified connection string using the specified transport type
+        /// (PCL) Only Http transport is allowed
+        /// </summary>
+        /// <param name="connectionString">Connection string for the IoT hub (including DeviceId)</param>
+        /// <param name="transportType">Specifies whether Amqp or Http transport is used</param>
+        /// <param name="pipelineBuilder">Device client pipeline builder</param>
+        /// <returns>DeviceClient</returns>
+#if !WINDOWS_UWP
+        public
+#endif
+        static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType, IDeviceClientPipelineBuilder pipelineBuilder)
+        {
             if (connectionString == null)
             {
                 throw new ArgumentNullException(nameof(connectionString));
@@ -340,7 +362,8 @@ namespace Microsoft.Azure.Devices.Client
                     {
                         new AmqpTransportSettings(TransportType.Amqp_Tcp_Only),
                         new AmqpTransportSettings(TransportType.Amqp_WebSocket_Only)
-                    });
+                    },
+                    pipelineBuilder);
 #endif
                 case TransportType.Mqtt:
 #if WINDOWS_UWP || PCL
@@ -357,7 +380,7 @@ namespace Microsoft.Azure.Devices.Client
 #if PCL
                     throw new NotImplementedException("Amqp protocol is not supported");
 #else
-                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new AmqpTransportSettings(transportType) });
+                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new AmqpTransportSettings(transportType) }, pipelineBuilder);
 #endif
                 case TransportType.Mqtt_WebSocket_Only:
                 case TransportType.Mqtt_Tcp_Only:
@@ -371,7 +394,7 @@ namespace Microsoft.Azure.Devices.Client
                     IotHubConnectionString iotHubConnectionString = IotHubConnectionString.Parse(connectionString);
                     return new DeviceClient(iotHubConnectionString);
 #else
-                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new Http1TransportSettings() });
+                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new Http1TransportSettings() }, pipelineBuilder);
 #endif
                 default:
 #if !PCL
@@ -410,13 +433,29 @@ namespace Microsoft.Azure.Devices.Client
         }
 
 #if !PCL
+
         /// <summary>
         /// Create DeviceClient from the specified connection string using a prioritized list of transports
         /// </summary>
         /// <param name="connectionString">Connection string for the IoT hub (with DeviceId)</param>
         /// <param name="transportSettings">Prioritized list of transports and their settings</param>
         /// <returns>DeviceClient</returns>
-        public static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArrayAttribute] ITransportSettings[] transportSettings)
+        public static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings)
+        {
+            return CreateFromConnectionString(connectionString, transportSettings, null);
+        }
+
+        /// <summary>
+        /// Create DeviceClient from the specified connection string using a prioritized list of transports
+        /// </summary>
+        /// <param name="connectionString">Connection string for the IoT hub (with DeviceId)</param>
+        /// <param name="transportSettings">Prioritized list of transports and their settings</param>
+        /// <param name="pipelineBuilder">Device client pipeline builder</param>
+        /// <returns>DeviceClient</returns>
+#if !WINDOWS_UWP
+        public
+#endif
+        static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             if (connectionString == null)
             {
@@ -466,8 +505,10 @@ namespace Microsoft.Azure.Devices.Client
                 }
             }
 
+            pipelineBuilder = pipelineBuilder ?? BuildPipeline();
+            
             // Defer concrete DeviceClient creation to OpenAsync
-            return new DeviceClient(iotHubConnectionString, transportSettings);
+            return new DeviceClient(iotHubConnectionString, transportSettings, pipelineBuilder);
         }
 
         /// <summary>
