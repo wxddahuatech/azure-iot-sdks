@@ -373,7 +373,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                     {
                         new MqttTransportSettings(TransportType.Mqtt_Tcp_Only),
                         new MqttTransportSettings(TransportType.Mqtt_WebSocket_Only)
-                    });
+                    },
+                    pipelineBuilder);
 #endif
                 case TransportType.Amqp_WebSocket_Only:
                 case TransportType.Amqp_Tcp_Only:
@@ -387,7 +388,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
 #if WINDOWS_UWP || PCL
                     throw new NotImplementedException("Mqtt protocol is not supported");
 #else
-                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new MqttTransportSettings(transportType) });
+                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new MqttTransportSettings(transportType) }, pipelineBuilder);
 #endif
                 case TransportType.Http1:
 #if PCL
