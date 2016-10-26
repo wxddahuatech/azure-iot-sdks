@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Microsoft Azure IoT Device SDK for C
-   &#160;<span id="projectnumber">1.0.16</span>
+   &#160;<span id="projectnumber">1.0.17</span>
    </div>
    <div id="projectbrief">The Microsoft Azure IoT device libraries for C contain code that facilitates building devices and applications that connect to and are managed by Azure IoT Hub services.</div>
   </td>
@@ -111,10 +111,22 @@ typedef enum <a class="el" href="iothub__client__ll_8h.html#aad29ba44eb4ad88bf10
 typedef enum <a class="el" href="iothub__client__ll_8h.html#af338feaaafa37bd3352967a1fe52c9e7">IOTHUB_CLIENT_CONFIRMATION_RESULT_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a4577382ad30d162f2b9cf461ead5639b">IOTHUB_CLIENT_CONFIRMATION_RESULT</a></td></tr>
 <tr class="memdesc:a4577382ad30d162f2b9cf461ead5639b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the event confirmation callback is invoked to indicate status of the event processing in the hub. <br /></td></tr>
 <tr class="separator:a4577382ad30d162f2b9cf461ead5639b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96be12e46b5c5521ae4c0631b7964708"><td class="memItemLeft" align="right" valign="top"><a id="a96be12e46b5c5521ae4c0631b7964708"></a>
+typedef enum <a class="el" href="iothub__client__ll_8h.html#ab3aa2333af8aa5c8e30bda27c2c20ace">IOTHUB_CLIENT_CONNECTION_STATUS_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a96be12e46b5c5521ae4c0631b7964708">IOTHUB_CLIENT_CONNECTION_STATUS</a></td></tr>
+<tr class="memdesc:a96be12e46b5c5521ae4c0631b7964708"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the connection status callback is invoked to indicate status of the connection in the hub. <br /></td></tr>
+<tr class="separator:a96be12e46b5c5521ae4c0631b7964708"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b9c3b6812e2a20c34c9af7b6487691c"><td class="memItemLeft" align="right" valign="top"><a id="a0b9c3b6812e2a20c34c9af7b6487691c"></a>
+typedef enum <a class="el" href="iothub__client__ll_8h.html#a393e424a05d67380cdefb7dce6626981">IOTHUB_CLIENT_CONNECTION_STATUS_REASON_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a0b9c3b6812e2a20c34c9af7b6487691c">IOTHUB_CLIENT_CONNECTION_STATUS_REASON</a></td></tr>
+<tr class="memdesc:a0b9c3b6812e2a20c34c9af7b6487691c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the connection status callback is invoked to indicate status of the connection in the hub. <br /></td></tr>
+<tr class="separator:a0b9c3b6812e2a20c34c9af7b6487691c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a988b1c83b28d268c642d72dcab8228a4"><td class="memItemLeft" align="right" valign="top"><a id="a988b1c83b28d268c642d72dcab8228a4"></a>
 typedef enum <a class="el" href="iothub__client__ll_8h.html#ad6c1da5dbe6e1dd6746ab930b377d531">IOTHUBMESSAGE_DISPOSITION_RESULT_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a988b1c83b28d268c642d72dcab8228a4">IOTHUBMESSAGE_DISPOSITION_RESULT</a></td></tr>
 <tr class="memdesc:a988b1c83b28d268c642d72dcab8228a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration returned by the callback which is invoked whenever the IoT Hub sends a message to the device. <br /></td></tr>
 <tr class="separator:a988b1c83b28d268c642d72dcab8228a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d8ad59aa248034ed2e231835f703a01"><td class="memItemLeft" align="right" valign="top"><a id="a2d8ad59aa248034ed2e231835f703a01"></a>
+typedef enum <a class="el" href="iothub__client__ll_8h.html#abe1761cf9195b46ecc118ce8c5d730b8">IOTHUB_CLIENT_RETRY_POLICY_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a2d8ad59aa248034ed2e231835f703a01">IOTHUB_CLIENT_RETRY_POLICY</a></td></tr>
+<tr class="memdesc:a2d8ad59aa248034ed2e231835f703a01"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the event confirmation callback is invoked to indicate status of the event processing in the hub. <br /></td></tr>
+<tr class="separator:a2d8ad59aa248034ed2e231835f703a01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac14a59dcc227623976d044d1805b5e22"><td class="memItemLeft" align="right" valign="top"><a id="ac14a59dcc227623976d044d1805b5e22"></a>
 typedef struct <a class="el" href="struct_i_o_t_h_u_b___c_l_i_e_n_t___c_o_n_f_i_g___t_a_g.html">IOTHUB_CLIENT_CONFIG_TAG</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#ac14a59dcc227623976d044d1805b5e22">IOTHUB_CLIENT_CONFIG</a></td></tr>
 <tr class="memdesc:ac14a59dcc227623976d044d1805b5e22"><td class="mdescLeft">&#160;</td><td class="mdescRight">This struct captures IoTHub client configuration. <br /></td></tr>
@@ -135,9 +147,18 @@ Enumerations</h2></td></tr>
 <tr class="memitem:af338feaaafa37bd3352967a1fe52c9e7"><td class="memItemLeft" align="right" valign="top"><a id="af338feaaafa37bd3352967a1fe52c9e7"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#af338feaaafa37bd3352967a1fe52c9e7">IOTHUB_CLIENT_CONFIRMATION_RESULT_TAG</a> <tr class="memdesc:af338feaaafa37bd3352967a1fe52c9e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the event confirmation callback is invoked to indicate status of the event processing in the hub. <br /></td></tr>
 </td></tr>
 <tr class="separator:af338feaaafa37bd3352967a1fe52c9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3aa2333af8aa5c8e30bda27c2c20ace"><td class="memItemLeft" align="right" valign="top"><a id="ab3aa2333af8aa5c8e30bda27c2c20ace"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#ab3aa2333af8aa5c8e30bda27c2c20ace">IOTHUB_CLIENT_CONNECTION_STATUS_TAG</a> <tr class="memdesc:ab3aa2333af8aa5c8e30bda27c2c20ace"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the connection status callback is invoked to indicate status of the connection in the hub. <br /></td></tr>
+</td></tr>
+<tr class="separator:ab3aa2333af8aa5c8e30bda27c2c20ace"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a393e424a05d67380cdefb7dce6626981"><td class="memItemLeft" align="right" valign="top"><a id="a393e424a05d67380cdefb7dce6626981"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a393e424a05d67380cdefb7dce6626981">IOTHUB_CLIENT_CONNECTION_STATUS_REASON_TAG</a> <tr class="memdesc:a393e424a05d67380cdefb7dce6626981"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the connection status callback is invoked to indicate status of the connection in the hub. <br /></td></tr>
+</td></tr>
+<tr class="separator:a393e424a05d67380cdefb7dce6626981"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6c1da5dbe6e1dd6746ab930b377d531"><td class="memItemLeft" align="right" valign="top"><a id="ad6c1da5dbe6e1dd6746ab930b377d531"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#ad6c1da5dbe6e1dd6746ab930b377d531">IOTHUBMESSAGE_DISPOSITION_RESULT_TAG</a> <tr class="memdesc:ad6c1da5dbe6e1dd6746ab930b377d531"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration returned by the callback which is invoked whenever the IoT Hub sends a message to the device. <br /></td></tr>
 </td></tr>
 <tr class="separator:ad6c1da5dbe6e1dd6746ab930b377d531"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe1761cf9195b46ecc118ce8c5d730b8"><td class="memItemLeft" align="right" valign="top"><a id="abe1761cf9195b46ecc118ce8c5d730b8"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#abe1761cf9195b46ecc118ce8c5d730b8">IOTHUB_CLIENT_RETRY_POLICY_TAG</a> <tr class="memdesc:abe1761cf9195b46ecc118ce8c5d730b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration passed in by the IoT Hub when the event confirmation callback is invoked to indicate status of the event processing in the hub. <br /></td></tr>
+</td></tr>
+<tr class="separator:abe1761cf9195b46ecc118ce8c5d730b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -162,6 +183,15 @@ Functions</h2></td></tr>
 <tr class="memitem:af8c8a00af8c2fac1ccf2111eb4e2016c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#af8c8a00af8c2fac1ccf2111eb4e2016c">IoTHubClient_LL_SetMessageCallback</a> (IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, IOTHUB_CLIENT_MESSAGE_CALLBACK_ASYNC messageCallback, void *userContextCallback)</td></tr>
 <tr class="memdesc:af8c8a00af8c2fac1ccf2111eb4e2016c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the message callback to be invoked when IoT Hub issues a message to the device. This is a blocking call.  <a href="#af8c8a00af8c2fac1ccf2111eb4e2016c">More...</a><br /></td></tr>
 <tr class="separator:af8c8a00af8c2fac1ccf2111eb4e2016c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d0656a868fcbdaba0fba066fbe92bd9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a6d0656a868fcbdaba0fba066fbe92bd9">IoTHubClient_LL_SetConnectionStatusCallback</a> (IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, IOTHUB_CLIENT_CONNECTION_STATUS_CALLBACK connectionStatusCallback, void *userContextCallback)</td></tr>
+<tr class="memdesc:a6d0656a868fcbdaba0fba066fbe92bd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call.  <a href="#a6d0656a868fcbdaba0fba066fbe92bd9">More...</a><br /></td></tr>
+<tr class="separator:a6d0656a868fcbdaba0fba066fbe92bd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a237058a2e960e1b9331a05f9d3706411"><td class="memItemLeft" align="right" valign="top"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a237058a2e960e1b9331a05f9d3706411">IoTHubClient_LL_SetRetryPolicy</a> (IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, <a class="el" href="iothub__client__ll_8h.html#a2d8ad59aa248034ed2e231835f703a01">IOTHUB_CLIENT_RETRY_POLICY</a> retryPolicy, size_t retryTimeoutLimitinSeconds)</td></tr>
+<tr class="memdesc:a237058a2e960e1b9331a05f9d3706411"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call.  <a href="#a237058a2e960e1b9331a05f9d3706411">More...</a><br /></td></tr>
+<tr class="separator:a237058a2e960e1b9331a05f9d3706411"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4567844b847ae3b91041f02a4b4dea57"><td class="memItemLeft" align="right" valign="top"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a4567844b847ae3b91041f02a4b4dea57">IoTHubClient_LL_GetRetryPolicy</a> (IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, <a class="el" href="iothub__client__ll_8h.html#a2d8ad59aa248034ed2e231835f703a01">IOTHUB_CLIENT_RETRY_POLICY</a> *retryPolicy, size_t *retryTimeoutLimitinSeconds)</td></tr>
+<tr class="memdesc:a4567844b847ae3b91041f02a4b4dea57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call.  <a href="#a4567844b847ae3b91041f02a4b4dea57">More...</a><br /></td></tr>
+<tr class="separator:a4567844b847ae3b91041f02a4b4dea57"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21b712300499f014b8c467e195f2503c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__ll_8h.html#a21b712300499f014b8c467e195f2503c">IoTHubClient_LL_GetLastMessageReceiveTime</a> (IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, time_t *lastMessageReceiveTime)</td></tr>
 <tr class="memdesc:a21b712300499f014b8c467e195f2503c"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function returns in the out parameter <code>lastMessageReceiveTime</code> what was the value of the <code>time</code> function when the last message was received at the client.  <a href="#a21b712300499f014b8c467e195f2503c">More...</a><br /></td></tr>
 <tr class="separator:a21b712300499f014b8c467e195f2503c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -367,6 +397,52 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a4567844b847ae3b91041f02a4b4dea57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4567844b847ae3b91041f02a4b4dea57">&sect;&nbsp;</a></span>IoTHubClient_LL_GetRetryPolicy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a> IoTHubClient_LL_GetRetryPolicy </td>
+          <td>(</td>
+          <td class="paramtype">IOTHUB_CLIENT_LL_HANDLE&#160;</td>
+          <td class="paramname"><em>iotHubClientHandle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="iothub__client__ll_8h.html#a2d8ad59aa248034ed2e231835f703a01">IOTHUB_CLIENT_RETRY_POLICY</a> *&#160;</td>
+          <td class="paramname"><em>retryPolicy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>retryTimeoutLimitinSeconds</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">iotHubClientHandle</td><td>The handle created by a call to the create function. </td></tr>
+    <tr><td class="paramname">retryPolicy</td><td>Out parameter containing the policy to use to reconnect to IoT Hub. </td></tr>
+    <tr><td class="paramname">retryTimeoutLimitinSeconds</td><td>Out parameter containing maximum amount of time in seconds to attempt reconnection to IOT Hub.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>NOTE:</b> The application behavior is undefined if the user calls the <a class="el" href="iothub__client__ll_8h.html#afc3049dc24e311713ab4735873989a4a" title="Disposes of resources allocated by the IoT Hub client. This is a blocking call. ">IoTHubClient_LL_Destroy</a> function from within any callback.</p>
+<dl class="section return"><dt>Returns</dt><dd>IOTHUB_CLIENT_OK upon success or an error code upon failure. </dd></dl>
+
+</div>
+</div>
 <a id="aa7773cdda101288cfd805c34f726eb84"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa7773cdda101288cfd805c34f726eb84">&sect;&nbsp;</a></span>IoTHubClient_LL_GetSendStatus()</h2>
 
@@ -449,6 +525,52 @@ Functions</h2></td></tr>
     <tr><td class="paramname">iotHubClientHandle</td><td>The handle created by a call to the create function. </td></tr>
     <tr><td class="paramname">eventMessageHandle</td><td>The handle to an IoT Hub message. </td></tr>
     <tr><td class="paramname">eventConfirmationCallback</td><td>The callback specified by the device for receiving confirmation of the delivery of the IoT Hub message. This callback can be expected to invoke the <a class="el" href="iothub__client__ll_8h.html#ab47deec96944dd3f1bf0e747ab565277" title="Asynchronous call to send the message specified by eventMessageHandle. ">IoTHubClient_LL_SendEventAsync</a> function for the same message in an attempt to retry sending a failing message. The user can specify a <code>NULL</code> value here to indicate that no callback is required. </td></tr>
+    <tr><td class="paramname">userContextCallback</td><td>User specified context that will be provided to the callback. This can be <code>NULL</code>.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>NOTE:</b> The application behavior is undefined if the user calls the <a class="el" href="iothub__client__ll_8h.html#afc3049dc24e311713ab4735873989a4a" title="Disposes of resources allocated by the IoT Hub client. This is a blocking call. ">IoTHubClient_LL_Destroy</a> function from within any callback.</p>
+<dl class="section return"><dt>Returns</dt><dd>IOTHUB_CLIENT_OK upon success or an error code upon failure. </dd></dl>
+
+</div>
+</div>
+<a id="a6d0656a868fcbdaba0fba066fbe92bd9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d0656a868fcbdaba0fba066fbe92bd9">&sect;&nbsp;</a></span>IoTHubClient_LL_SetConnectionStatusCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a> IoTHubClient_LL_SetConnectionStatusCallback </td>
+          <td>(</td>
+          <td class="paramtype">IOTHUB_CLIENT_LL_HANDLE&#160;</td>
+          <td class="paramname"><em>iotHubClientHandle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">IOTHUB_CLIENT_CONNECTION_STATUS_CALLBACK&#160;</td>
+          <td class="paramname"><em>connectionStatusCallback</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>userContextCallback</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">iotHubClientHandle</td><td>The handle created by a call to the create function. </td></tr>
+    <tr><td class="paramname">connectionStatusCallback</td><td>The callback specified by the device for receiving updates about the status of the connection to IoT Hub. </td></tr>
     <tr><td class="paramname">userContextCallback</td><td>User specified context that will be provided to the callback. This can be <code>NULL</code>.</td></tr>
   </table>
   </dd>
@@ -557,6 +679,52 @@ Functions</h2></td></tr>
 </ul>
 </li>
 </ul>
+<dl class="section return"><dt>Returns</dt><dd>IOTHUB_CLIENT_OK upon success or an error code upon failure. </dd></dl>
+
+</div>
+</div>
+<a id="a237058a2e960e1b9331a05f9d3706411"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a237058a2e960e1b9331a05f9d3706411">&sect;&nbsp;</a></span>IoTHubClient_LL_SetRetryPolicy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="iothub__client__ll_8h.html#acab188935ec8a12092ab518112268bfd">IOTHUB_CLIENT_RESULT</a> IoTHubClient_LL_SetRetryPolicy </td>
+          <td>(</td>
+          <td class="paramtype">IOTHUB_CLIENT_LL_HANDLE&#160;</td>
+          <td class="paramname"><em>iotHubClientHandle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="iothub__client__ll_8h.html#a2d8ad59aa248034ed2e231835f703a01">IOTHUB_CLIENT_RETRY_POLICY</a>&#160;</td>
+          <td class="paramname"><em>retryPolicy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>retryTimeoutLimitinSeconds</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Sets up the connection status callback to be invoked representing the status of the connection to IOT Hub. This is a blocking call. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">iotHubClientHandle</td><td>The handle created by a call to the create function. </td></tr>
+    <tr><td class="paramname">retryPolicy</td><td>The policy to use to reconnect to IoT Hub when a connection drops. </td></tr>
+    <tr><td class="paramname">retryTimeoutLimitinSeconds</td><td>Maximum amount of time(seconds) to attempt reconnection when a connection drops to IOT Hub.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p><b>NOTE:</b> The application behavior is undefined if the user calls the <a class="el" href="iothub__client__ll_8h.html#afc3049dc24e311713ab4735873989a4a" title="Disposes of resources allocated by the IoT Hub client. This is a blocking call. ">IoTHubClient_LL_Destroy</a> function from within any callback.</p>
 <dl class="section return"><dt>Returns</dt><dd>IOTHUB_CLIENT_OK upon success or an error code upon failure. </dd></dl>
 
 </div>
