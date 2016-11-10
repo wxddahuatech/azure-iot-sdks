@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JMockit.class)
 public class IotHubConnectionStringTest
 {
-    private static final String URL_API_VERSION = "api-version=2016-02-03";
+    private static final String URL_API_VERSION = "api-version=2016-11-14";
 
     // Tests_SRS_SERVICE_SDK_JAVA_IOTHUBCONNECTIONSTRING_12_001: [The function shall serialize the object properties to a string using the following format: SharedAccessKeyName@sas.root.IotHubName]
     @Test
@@ -86,7 +86,7 @@ public class IotHubConnectionStringTest
         String sharedAccessKey = "1234567890abcdefghijklmnopqrstvwxyz=";
         String connectionString = "HostName=" + hostName + ";SharedAccessKeyName=" + sharedAccessKeyName + ";" + policyName + "=" + sharedAccessKey;
         IotHubConnectionString iotHubConnectionString = IotHubConnectionStringBuilder.createConnectionString(connectionString);
-        String expected = "https://HOSTNAME.b.c.d/devices/xxx-device?api-version=2016-02-03";
+        String expected = "https://HOSTNAME.b.c.d/devices/xxx-device?api-version=2016-11-14";
         // Act
         String actual = iotHubConnectionString.getUrlDevice(deviceId).toString();
         // Assert
@@ -142,7 +142,7 @@ public class IotHubConnectionStringTest
         String sharedAccessKey = "1234567890abcdefghijklmnopqrstvwxyz=";
         String connectionString = "HostName=" + hostName + ";SharedAccessKeyName=" + sharedAccessKeyName + ";" + policyName + "=" + sharedAccessKey;
         IotHubConnectionString iotHubConnectionString = IotHubConnectionStringBuilder.createConnectionString(connectionString);
-        String expected = "https://HOSTNAME.b.c.d/devices/?top=10&api-version=2016-02-03";
+        String expected = "https://HOSTNAME.b.c.d/devices/?top=10&api-version=2016-11-14";
         // Act
         String actual = iotHubConnectionString.getUrlDeviceList(maxCount).toString();
         // Assert
@@ -161,7 +161,7 @@ public class IotHubConnectionStringTest
         String sharedAccessKey = "1234567890abcdefghijklmnopqrstvwxyz=";
         String connectionString = "HostName=" + hostName + ";SharedAccessKeyName=" + sharedAccessKeyName + ";" + policyName + "=" + sharedAccessKey;
         IotHubConnectionString iotHubConnectionString = IotHubConnectionStringBuilder.createConnectionString(connectionString);
-        String expected = "https://HOSTNAME.b.c.d/statistics/devices?api-version=2016-02-03";
+        String expected = "https://HOSTNAME.b.c.d/statistics/devices?api-version=2016-11-14";
         // Act
         String actual = iotHubConnectionString.getUrlDeviceStatistics().toString();
         // Assert

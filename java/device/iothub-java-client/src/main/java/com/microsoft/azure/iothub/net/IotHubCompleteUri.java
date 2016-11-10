@@ -29,7 +29,7 @@ public final class IotHubCompleteUri
      */
     public IotHubCompleteUri(String iotHubHostname, String deviceId, String eTag)
     {
-        // Codes_SRS_IOTHUBCOMPLETEURI_11_001: [The constructor returns a URI with the format "[iotHubHostname]/devices/[deviceId]/messages/devicebound/[eTag]?api-version=2016-02-03".]
+        // Codes_SRS_IOTHUBCOMPLETEURI_11_001: [The constructor returns a URI with the format "[iotHubHostname]/devices/[deviceId]/messages/devicebound/[eTag]?api-version=2016-11-14".]
         String completePath = String.format(COMPLETE_PATH_FORMAT, eTag);
         this.uri = new IotHubUri(iotHubHostname, deviceId, completePath);
     }
@@ -42,7 +42,7 @@ public final class IotHubCompleteUri
     @Override
     public String toString()
     {
-        // Codes_SRS_IOTHUBCOMPLETEURI_11_002: [The string representation of the IoT Hub event URI shall be constructed with the format "[iotHubHostname]/devices/[deviceId]/messages/devicebound/[eTag]?api-version=2016-02-03".]
+        // Codes_SRS_IOTHUBCOMPLETEURI_11_002: [The string representation of the IoT Hub event URI shall be constructed with the format "[iotHubHostname]/devices/[deviceId]/messages/devicebound/[eTag]?api-version=2016-11-14".]
         return this.uri.toString();
     }
 
