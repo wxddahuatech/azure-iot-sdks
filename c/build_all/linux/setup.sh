@@ -22,6 +22,7 @@ repo_exists ()
     [ "$(git rev-parse --is-inside-work-tree)" == "true" ] || return 1
     origin=$(git config remote.origin.url) || return 1
     actual_name=$(repo_name_from_uri $origin)
+    echo ${repo_name,,}
     [ "${repo_name,,}" == "${actual_name,,}" ] || return 1
     pop_dir
 }
