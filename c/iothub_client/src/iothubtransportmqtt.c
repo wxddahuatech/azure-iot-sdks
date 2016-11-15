@@ -121,14 +121,14 @@ typedef struct MQTTTRANSPORT_HANDLE_DATA_TAG
     CONTROL_PACKET_TYPE currPacketState;
     XIO_HANDLE xioTransport;
     uint16_t keepAliveValue;
-    uint64_t mqtt_connect_time;
+    tickcounter_ms_t mqtt_connect_time;
     size_t connectFailCount;
-    uint64_t connectTick;
+    tickcounter_ms_t connectTick;
 } MQTTTRANSPORT_HANDLE_DATA, *PMQTTTRANSPORT_HANDLE_DATA;
 
 typedef struct MQTT_MESSAGE_DETAILS_LIST_TAG
 {
-    uint64_t msgPublishTime;
+    tickcounter_ms_t msgPublishTime;
     size_t retryCount;
     IOTHUB_MESSAGE_LIST* iotHubMessageEntry;
     void* context;
@@ -727,7 +727,7 @@ static int InitializeConnection(PMQTTTRANSPORT_HANDLE_DATA transportState)
             // to the service
             if (transportState->connectFailCount > FAILED_CONN_BACKOFF_VALUE)
             {
-                uint64_t currentTick;
+                tickcounter_ms_t currentTick;
                 if (tickcounter_get_current_ms(g_msgTickCounter, &currentTick) == 0)
                 {
                     if ( ((currentTick - transportState->connectTick)/1000) <= DEFAULT_CONNECTION_INTERVAL)
@@ -758,7 +758,7 @@ static int InitializeConnection(PMQTTTRANSPORT_HANDLE_DATA transportState)
         if (transportState->connected)
         {
             // We are connected and not being closed, so does SAS need to reconnect?
-            uint64_t current_time;
+            tickcounter_ms_t current_time;
             (void)tickcounter_get_current_ms(g_msgTickCounter, &current_time);
             if ((current_time - transportState->mqtt_connect_time) / 1000 > (SAS_TOKEN_DEFAULT_LIFETIME*SAS_REFRESH_MULTIPLIER))
             {
@@ -1187,7 +1187,7 @@ static void IoTHubTransportMqtt_DoWork(TRANSPORT_LL_HANDLE handle, IOTHUB_CLIENT
                     DLIST_ENTRY nextListEntry;
                     nextListEntry.Flink = currentListEntry->Flink;
 
-                    uint64_t current_ms;
+                    tickcounter_ms_t current_ms;
                     (void)tickcounter_get_current_ms(g_msgTickCounter, &current_ms);
                     /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_033: [IoTHubTransportMqtt_DoWork shall iterate through the Waiting Acknowledge messages looking for any message that has been waiting longer than 2 min.]*/
                     if (((current_ms - mqttMsgEntry->msgPublishTime) / 1000) > RESEND_TIMEOUT_VALUE_MIN)

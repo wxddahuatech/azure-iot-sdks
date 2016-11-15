@@ -319,7 +319,7 @@ public:
     BASEIMPLEMENTATION::gballoc_free(tick_counter);
     MOCK_VOID_METHOD_END()
 
-        MOCK_STATIC_METHOD_2(, int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, uint64_t*, current_ms);
+        MOCK_STATIC_METHOD_2(, int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, tickcounter_ms_t*, current_ms);
     MOCK_METHOD_END(int, 0)
 
 #ifndef DONT_USE_UPLOADTOBLOB
@@ -386,7 +386,7 @@ DECLARE_GLOBAL_MOCK_METHOD_0(CIoTHubClientLLMocks, , const char*, IoTHubClient_G
 
 DECLARE_GLOBAL_MOCK_METHOD_0(CIoTHubClientLLMocks, , TICK_COUNTER_HANDLE, tickcounter_create);
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubClientLLMocks, , void, tickcounter_destroy, TICK_COUNTER_HANDLE, tick_counter);
-DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubClientLLMocks, , int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, uint64_t*, current_ms);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubClientLLMocks, , int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, tickcounter_ms_t*, current_ms);
 
 #ifndef DONT_USE_UPLOADTOBLOB
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubClientLLMocks, , IOTHUB_CLIENT_LL_UPLOADTOBLOB_HANDLE, IoTHubClient_LL_UploadToBlob_Create, const IOTHUB_CLIENT_CONFIG*, config);
@@ -3102,7 +3102,7 @@ TEST_FUNCTION(IoTHubClient_LL_SendEventAsync_fails_when_current_ms_cannot_be_obt
     ///arrange
     CIoTHubClientLLMocks mocks;
     auto handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t thisIsNotZero = 312984751;
+    tickcounter_ms_t thisIsNotZero = 312984751;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &thisIsNotZero); /*this forces _SendEventAsync to query the currentTime. If that fails, _SendEvent should fail as well*/
     auto messageHandle = (IOTHUB_MESSAGE_HANDLE)1;
     mocks.ResetAllCalls();
@@ -4009,7 +4009,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_fails_when_underlying_transport_fails)
 
 }
 #endif
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_zero_after_Create_succeeds)
 {
     ///arrange
@@ -4018,7 +4018,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_zero_after_Create_succ
     mocks.ResetAllCalls();
 
     ///act
-    uint64_t zero = 0;
+    tickcounter_ms_t zero = 0;
     auto result = IoTHubClient_LL_SetOption(handle, "messageTimeout", &zero);
 
     ///assert
@@ -4029,7 +4029,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_zero_after_Create_succ
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_one_after_Create_succeeds)
 {
     ///arrange
@@ -4038,7 +4038,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_one_after_Create_succe
     mocks.ResetAllCalls();
 
     ///act
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     auto result = IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     ///assert
@@ -4050,18 +4050,18 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_to_one_after_Create_succe
 
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_can_be_reverted_back_to_zero_succeeds)
 {
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
     mocks.ResetAllCalls();
 
     ///act
-    uint64_t zero = 0;
+    tickcounter_ms_t zero = 0;
     auto result = IoTHubClient_LL_SetOption(handle, "messageTimeout", &zero);
 
     ///assert
@@ -4072,20 +4072,20 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_can_be_reverted_back_to_z
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_041: [ If more than value miliseconds have passed since the call to IoTHubClient_LL_SendEventAsync then the message callback shall be called with a status code of IOTHUB_CLIENT_CONFIRMATION_TIMEOUT. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_calls_timeout_callback)
 {
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 1 messages that will expire*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
@@ -4096,7 +4096,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_calls_timeout_callback)
     EXPECTED_CALL(mocks, FAKE_IoTHubTransport_DoWork(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreAllCalls();
 
-    uint64_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout*/
+    tickcounter_ms_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout*/
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &twelve, sizeof(twelve));
@@ -4129,7 +4129,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_defaults_to_zero)
     /*send 1 messages that will expire*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
@@ -4140,7 +4140,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_defaults_to_zero)
     EXPECTED_CALL(mocks, FAKE_IoTHubTransport_DoWork(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreAllCalls();
 
-    uint64_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => would result in timeout, except the fact that messageTimeout option has never been set, therefore no timeout shall be called*/
+    tickcounter_ms_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => would result in timeout, except the fact that messageTimeout option has never been set, therefore no timeout shall be called*/
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &twelve, sizeof(twelve));
@@ -4155,19 +4155,19 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_defaults_to_zero)
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_only_removes_the_message_if_it_has_NULL_callback)
 {
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 1 messages that will expire*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
@@ -4178,7 +4178,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_only_removes_the_message_
     EXPECTED_CALL(mocks, FAKE_IoTHubTransport_DoWork(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreAllCalls();
 
-    uint64_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout*/
+    tickcounter_ms_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout*/
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &twelve, sizeof(twelve));
@@ -4200,20 +4200,20 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_only_removes_the_message_
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_041: [ If more than value miliseconds have passed since the call to IoTHubClient_LL_SendEventAsync then the message callback shall be called with a status code of IOTHUB_CLIENT_CONFIRMATION_TIMEOUT. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_when_exactly_on_the_edge_does_not_call_the_callback) /*because "more"*/
 {
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 1 messages that will expire*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
@@ -4224,7 +4224,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_when_exactly_on_the_edge_
     EXPECTED_CALL(mocks, FAKE_IoTHubTransport_DoWork(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreAllCalls();
 
-    uint64_t eleven = 11; /*11 = 10 (receive time) + 1 (timeout) => NO timeout*/
+    tickcounter_ms_t eleven = 11; /*11 = 10 (receive time) + 1 (timeout) => NO timeout*/
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &eleven, sizeof(eleven));
@@ -4239,26 +4239,26 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_when_exactly_on_the_edge_
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_041: [ If more than value miliseconds have passed since the call to IoTHubClient_LL_SendEventAsync then the message callback shall be called with a status code of IOTHUB_CLIENT_CONFIRMATION_TIMEOUT. ]*/
 TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_calls_1_timeout) /*test wants to see that message that did not timeout yet do not have their callbacks called*/
 {
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 2 messages that will expire at 12 and 13, both of these messages are send at time=10*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
     (void)IoTHubClient_LL_SendEventAsync(handle, TEST_DEVICEMESSAGE_HANDLE, eventConfirmationCallback, (void*)TEST_DEVICEMESSAGE_HANDLE);
 
-    uint64_t two = 2;
+    tickcounter_ms_t two = 2;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &two);
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
@@ -4271,7 +4271,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_ca
     EXPECTED_CALL(mocks, FAKE_IoTHubTransport_DoWork(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreAllCalls();
 
-    uint64_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
+    tickcounter_ms_t twelve = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &twelve, sizeof(twelve));
@@ -4304,19 +4304,19 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_ca
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 2 messages that will expire at 12 and 13, both of these messages are send at time=10*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
     (void)IoTHubClient_LL_SendEventAsync(handle, TEST_DEVICEMESSAGE_HANDLE, eventConfirmationCallback, (void*)TEST_DEVICEMESSAGE_HANDLE);
 
-    uint64_t two = 2;
+    tickcounter_ms_t two = 2;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &two);
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
@@ -4330,7 +4330,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_ca
         .IgnoreAllCalls();
 
     {/*this scope happen in the first _DoWork call*/
-        uint64_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
+        tickcounter_ms_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
         STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
             .IgnoreArgument(1)
             .CopyOutArgumentBuffer(2, &timeIsNow, sizeof(timeIsNow));
@@ -4345,7 +4345,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_ca
     }
 
     {/*this scope happen in the second _DoWork call*/
-        uint64_t timeIsNow = 13; /*13 > 10 (receive time) + 2 (timeout) => timeout!!!*/
+        tickcounter_ms_t timeIsNow = 13; /*13 > 10 (receive time) + 2 (timeout) => timeout!!!*/
         STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
             .IgnoreArgument(1)
             .CopyOutArgumentBuffer(2, &timeIsNow, sizeof(timeIsNow));
@@ -4372,7 +4372,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_with_timeouts_at_11_and_12_ca
     IoTHubClient_LL_Destroy(handle);
 }
 
-/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a uint64. ]*/
+/*Tests_SRS_IOTHUBCLIENT_LL_02_039: [ "messageTimeout" - once IoTHubClient_LL_SendEventAsync is called the message shall timeout after value miliseconds. Value is a pointer to a tickcounter_ms_t. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_041: [ If more than value miliseconds have passed since the call to IoTHubClient_LL_SendEventAsync then the message callback shall be called with a status code of IOTHUB_CLIENT_CONFIRMATION_TIMEOUT. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_043: [ Calling IoTHubClient_LL_SetOption with value set to "0" shall disable the timeout mechanism for all new messages. ]*/
 /*Tests_SRS_IOTHUBCLIENT_LL_02_044: [ Messages already delivered to IoTHubClient_LL shall not have their timeouts modified by a new call to IoTHubClient_LL_SetOption. ]*/
@@ -4381,19 +4381,19 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_one_with_timeout_one_without_
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 2 messages that will expire at 12 and 13, both of these messages are send at time=10*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
     (void)IoTHubClient_LL_SendEventAsync(handle, TEST_DEVICEMESSAGE_HANDLE, eventConfirmationCallback, (void*)TEST_DEVICEMESSAGE_HANDLE);
 
-    uint64_t zero = 0;
+    tickcounter_ms_t zero = 0;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &zero); /*essentially no timeout*/
     (void)IoTHubClient_LL_SendEventAsync(handle, TEST_DEVICEMESSAGE_HANDLE, eventConfirmationCallback, (void*)(TEST_DEVICEMESSAGE_HANDLE_2));
 
@@ -4404,7 +4404,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_one_with_timeout_one_without_
         .IgnoreAllCalls();
 
     {/*this scope happen in the first _DoWork call*/
-        uint64_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
+        tickcounter_ms_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!!*/
         STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
             .IgnoreArgument(1)
             .CopyOutArgumentBuffer(2, &timeIsNow, sizeof(timeIsNow));
@@ -4419,7 +4419,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_2_messages_one_with_timeout_one_without_
     }
 
     {/*this scope happen in the second _DoWork call*/
-        uint64_t timeIsNow = 999999999999999ULL; /*some very big number*/
+        tickcounter_ms_t timeIsNow = 999999999UL; /*some very big number*/
         STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
             .IgnoreArgument(1)
             .CopyOutArgumentBuffer(2, &timeIsNow, sizeof(timeIsNow));
@@ -4442,13 +4442,13 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_when_tickcounter_fails_in
     ///arrange
     CIoTHubClientLLMocks mocks;
     IOTHUB_CLIENT_LL_HANDLE handle = IoTHubClient_LL_Create(&TEST_CONFIG);
-    uint64_t one = 1;
+    tickcounter_ms_t one = 1;
     (void)IoTHubClient_LL_SetOption(handle, "messageTimeout", &one);
 
     /*send 2 messages that will expire at 12 and 13, both of these messages are send at time=10*/
     /*because sending messages stamps the message's timeout, the call to tickcounter_get_current_ms needs to be here, so the test can says
     "the message has been received at time=10*/
-    uint64_t ten = 10;
+    tickcounter_ms_t ten = 10;
     STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1)
         .CopyOutArgumentBuffer(2, &ten, sizeof(ten));
@@ -4461,7 +4461,7 @@ TEST_FUNCTION(IoTHubClient_LL_SetOption_messageTimeout_when_tickcounter_fails_in
         .IgnoreAllCalls();
 
     {/*this scope happen in the _DoWork call*/
-        uint64_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!! (well - normally - but here the code doesn't call any callbacks because time cannot be obtained*/
+        tickcounter_ms_t timeIsNow = 12; /*12 > 10 (receive time) + 1 (timeout) => timeout!!! (well - normally - but here the code doesn't call any callbacks because time cannot be obtained*/
         STRICT_EXPECTED_CALL(mocks, tickcounter_get_current_ms(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
             .IgnoreArgument(1)
             .CopyOutArgumentBuffer(2, &timeIsNow, sizeof(timeIsNow))

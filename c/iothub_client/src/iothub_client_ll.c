@@ -38,7 +38,7 @@ typedef struct IOTHUB_CLIENT_LL_HANDLE_DATA_TAG
     void* messageUserContextCallback;
     time_t lastMessageReceiveTime;
     TICK_COUNTER_HANDLE tickCounter; /*shared tickcounter used to track message timeouts in waitingToSend list*/
-    uint64_t currentMessageTimeout;
+    tickcounter_ms_t currentMessageTimeout;
     IOTHUB_CLIENT_RETRY_POLICY retryPolicy;
     size_t retryTimeoutinSeconds;
 #ifndef DONT_USE_UPLOADTOBLOB
@@ -721,7 +721,7 @@ IOTHUB_CLIENT_RESULT IoTHubClient_LL_SetMessageCallback(IOTHUB_CLIENT_LL_HANDLE 
 
 static void DoTimeouts(IOTHUB_CLIENT_LL_HANDLE_DATA* handleData)
 {
-    uint64_t nowTick;
+    tickcounter_ms_t nowTick;
     if (tickcounter_get_current_ms(handleData->tickCounter, &nowTick) != 0)
     {
         LogError("unable to get the current ms, timeouts will not be processed");
@@ -944,7 +944,7 @@ IOTHUB_CLIENT_RESULT IoTHubClient_LL_SetOption(IOTHUB_CLIENT_LL_HANDLE iotHubCli
         {
             /*this is an option handled by IoTHubClient_LL*/
             /*Codes_SRS_IOTHUBCLIENT_LL_02_043: [ Calling IoTHubClient_LL_SetOption with value set to "0" shall disable the timeout mechanism for all new messages. ]*/
-            handleData->currentMessageTimeout = *(const uint64_t*)value;
+            handleData->currentMessageTimeout = *(const tickcounter_ms_t*)value;
             result = IOTHUB_CLIENT_OK;
         }
         else

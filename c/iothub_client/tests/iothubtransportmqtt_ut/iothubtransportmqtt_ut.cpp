@@ -91,7 +91,7 @@ static const size_t appMsgSize = sizeof(appMessage) / sizeof(appMessage[0]);
 static IOTHUB_CLIENT_CONFIG g_iothubClientConfig = { 0 };
 static DLIST_ENTRY g_waitingToSend;
 
-static uint64_t g_current_ms;
+static tickcounter_ms_t g_current_ms;
 static size_t g_tokenizerIndex;
 
 #define TEST_TIME_T ((time_t)-1)
@@ -446,7 +446,7 @@ public:
     MOCK_STATIC_METHOD_1(, void, tickcounter_destroy, TICK_COUNTER_HANDLE, tick_counter)
     MOCK_VOID_METHOD_END();
 
-    MOCK_STATIC_METHOD_2(, int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, uint64_t*, current_ms)
+    MOCK_STATIC_METHOD_2(, int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, tickcounter_ms_t*, current_ms)
         *current_ms = g_current_ms;
     MOCK_METHOD_END(int, 0);
 
@@ -522,7 +522,7 @@ DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubTransportMqttMocks, , time_t, get_time, time
 
 DECLARE_GLOBAL_MOCK_METHOD_0(CIoTHubTransportMqttMocks, , TICK_COUNTER_HANDLE, tickcounter_create);
 DECLARE_GLOBAL_MOCK_METHOD_1(CIoTHubTransportMqttMocks, , void, tickcounter_destroy, TICK_COUNTER_HANDLE, tick_counter);
-DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubTransportMqttMocks, , int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, uint64_t*, current_ms);
+DECLARE_GLOBAL_MOCK_METHOD_2(CIoTHubTransportMqttMocks, , int, tickcounter_get_current_ms, TICK_COUNTER_HANDLE, tick_counter, tickcounter_ms_t*, current_ms);
 
 
 static pfIoTHubTransport_GetHostname    IoTHubTransportMqtt_GetHostname;
