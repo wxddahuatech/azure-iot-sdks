@@ -13,6 +13,14 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1")
 endif()
 
+#make a nice global variable to know if we are on OSX or not
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    set(OSX TRUE)
+    set( OPENSSLDIR "/usr/local/opt/openssl/include" CACHE PATH "The directory where openssl is installed" )
+    set( OPENSSLLIBDIR "/usr/local/opt/openssl/lib" CACHE PATH "The directory where the openssl lib is installed" )
+    link_directories(${OPENSSLLIBDIR})
+endif()
+
 include (CTest)
 
 if(MSVC)
@@ -25,6 +33,8 @@ IF(WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     # Make warning as error
     add_definitions(/WX)
+elseif(OSX)
+    
 ELSE()
     # Make warning as error
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")

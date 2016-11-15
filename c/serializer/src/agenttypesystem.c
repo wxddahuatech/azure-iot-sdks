@@ -3018,7 +3018,7 @@ static int sscanfd(const char *src, int* dst)
 {
     char* next;
     (*dst) = strtol(src, &next, 10);
-    if ((src == next) || ((((*dst) == LONG_MAX) || ((*dst) == LONG_MIN)) && (errno != 0)))
+    if ((src == next) || ((((long)(*dst) == LONG_MAX) || ((long)(*dst) == LONG_MIN)) && (errno != 0)))
     {
         return EOF;
     }
@@ -3064,7 +3064,7 @@ static int sscanfu(const char*src, unsigned int* dst)
     char* next;
     (*dst) = strtoul(src, &next, 10);
     int error = errno;
-    if ((src == next) || (((*dst) == ULONG_MAX) && (error != 0)))
+    if ((src == next) || (((unsigned long)(*dst) == ULONG_MAX) && (error != 0)))
     {
         return EOF; 
     }

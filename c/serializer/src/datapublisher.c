@@ -52,7 +52,7 @@ DATA_PUBLISHER_HANDLE DataPublisher_Create(SCHEMA_MODEL_TYPE_HANDLE modelHandle,
 
     /* Codes_SRS_DATA_PUBLISHER_99_042:[ If a NULL argument is passed to it, DataPublisher_Create shall return NULL.] */
     if (
-        (modelHandle == NULL)
+        modelHandle == NULL
         )
     {
         result = NULL;
