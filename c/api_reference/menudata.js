@@ -22,7 +22,6 @@ var menudata={children:[
 {text:'t',url:'globals.html#index_t'},
 {text:'w',url:'globals.html#index_w'}]},
 {text:'Functions',url:'globals_func.html',children:[
-{text:'i',url:'globals_func.html#index_i'},
 {text:'m',url:'globals_func.html#index_m'},
 {text:'s',url:'globals_func.html#index_s'}]},
 {text:'Typedefs',url:'globals_type.html'},

@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Microsoft Azure IoT Device SDK for C
-   &#160;<span id="projectnumber">1.0.17</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">The Microsoft Azure IoT device libraries for C contain code that facilitates building devices and applications that connect to and are managed by Azure IoT Hub services.</div>
   </td>
@@ -73,30 +73,41 @@ $(function() {
 
 <p>Functions for managing the client SDK version.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &quot;azure_c_shared_utility/umock_c_prod.h&quot;</code><br />
+</div>
 <p><a href="iothub__client__version_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ad8bb41067344bbe6676b2edf7dc65be4"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__version_8h.html#ad8bb41067344bbe6676b2edf7dc65be4">IoTHubClient_GetVersionString</a> (void)</td></tr>
-<tr class="memdesc:ad8bb41067344bbe6676b2edf7dc65be4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a pointer to a null terminated string containing the current IoT Hub Client SDK version.  <a href="#ad8bb41067344bbe6676b2edf7dc65be4">More...</a><br /></td></tr>
-<tr class="separator:ad8bb41067344bbe6676b2edf7dc65be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab80cadf43e8fb8d8ae98cd443acf3522"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="iothub__client__version_8h.html#ab80cadf43e8fb8d8ae98cd443acf3522">MOCKABLE_FUNCTION</a> (, const char *, IoTHubClient_GetVersionString)</td></tr>
+<tr class="memdesc:ab80cadf43e8fb8d8ae98cd443acf3522"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a pointer to a null terminated string containing the current IoT Hub Client SDK version.  <a href="#ab80cadf43e8fb8d8ae98cd443acf3522">More...</a><br /></td></tr>
+<tr class="separator:ab80cadf43e8fb8d8ae98cd443acf3522"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Functions for managing the client SDK version. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="ad8bb41067344bbe6676b2edf7dc65be4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad8bb41067344bbe6676b2edf7dc65be4">&sect;&nbsp;</a></span>IoTHubClient_GetVersionString()</h2>
+<a id="ab80cadf43e8fb8d8ae98cd443acf3522"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab80cadf43e8fb8d8ae98cd443acf3522">&sect;&nbsp;</a></span>MOCKABLE_FUNCTION()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* IoTHubClient_GetVersionString </td>
+          <td class="memname">MOCKABLE_FUNCTION </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">IoTHubClient_GetVersionString&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">

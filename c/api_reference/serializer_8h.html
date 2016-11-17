@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Microsoft Azure IoT Device SDK for C
-   &#160;<span id="projectnumber">1.0.17</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">The Microsoft Azure IoT device libraries for C contain code that facilitates building devices and applications that connect to and are managed by Azure IoT Hub services.</div>
   </td>
@@ -107,6 +107,8 @@ Macros</h2></td></tr>
 <tr class="separator:a18c48c356331a3ff3084ff604da29b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b306a60e81bcfdf3729962df530ec16"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="serializer_8h.html#a8b306a60e81bcfdf3729962df530ec16">EXECUTE_COMMAND</a>(device,  command)</td></tr>
 <tr class="separator:a8b306a60e81bcfdf3729962df530ec16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab98abcb7175b01fc67a4444455e9b4d0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="serializer_8h.html#ab98abcb7175b01fc67a4444455e9b4d0">INGEST_DESIRED_PROPERTIES</a>(device,  desiredProperties)</td></tr>
+<tr class="separator:ab98abcb7175b01fc67a4444455e9b4d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The IoT Hub Serializer APIs allows developers to define models for their devices. </p>
@@ -302,6 +304,41 @@ Macros</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">schemaNamespace</td><td>The namespace to which the model belongs. </td></tr>
     <tr><td class="paramname">modelName</td><td>The name of the model. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ab98abcb7175b01fc67a4444455e9b4d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab98abcb7175b01fc67a4444455e9b4d0">&sect;&nbsp;</a></span>INGEST_DESIRED_PROPERTIES</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define INGEST_DESIRED_PROPERTIES</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">device, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">desiredProperties&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">device</td><td>return of CodeFirst_CreateDevice. </td></tr>
+    <tr><td class="paramname">desiredProperties</td><td>a null terminated string containing in JSON format the desired properties </td></tr>
   </table>
   </dd>
 </dl>

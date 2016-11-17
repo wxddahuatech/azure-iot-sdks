@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['serialize',['SERIALIZE',['../serializer_8h.html#a18c48c356331a3ff3084ff604da29b91',1,'serializer.h']]]
+  ['ingest_5fdesired_5fproperties',['INGEST_DESIRED_PROPERTIES',['../serializer_8h.html#ab98abcb7175b01fc67a4444455e9b4d0',1,'serializer.h']]]
 ];
