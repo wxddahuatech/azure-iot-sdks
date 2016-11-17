@@ -16,9 +16,7 @@ endif()
 #make a nice global variable to know if we are on OSX or not
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     set(OSX TRUE)
-    set( OPENSSLDIR "/usr/local/opt/openssl/include" CACHE PATH "The directory where openssl is installed" )
-    set( OPENSSLLIBDIR "/usr/local/opt/openssl/lib" CACHE PATH "The directory where the openssl lib is installed" )
-    link_directories(${OPENSSLLIBDIR})
+    set( OPENSSL_ROOT_DIR "/usr/local/opt/openssl" CACHE PATH "The directory where openssl is installed" )
 endif()
 
 include (CTest)
@@ -34,7 +32,9 @@ IF(WIN32)
     # Make warning as error
     add_definitions(/WX)
 elseif(OSX)
-    
+    set( OPENSSLDIR "${OPENSSL_ROOT_DIR}/include" )
+    set( OPENSSLLIBDIR "${OPENSSL_ROOT_DIR}/lib" )
+    link_directories(${OPENSSLLIBDIR})
 ELSE()
     # Make warning as error
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
