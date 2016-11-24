@@ -18,9 +18,6 @@ namespace Microsoft.Azure.Devices.Client.Transport
     /// Tries to open open connection in the protocol order it was set. 
     /// If fails tries to open the next one, etc.
     /// </summary>
-#if !WINDOWS_UWP
-    public
-#endif
     class ProtocolRoutingDelegatingHandler : DefaultDelegatingHandler
     {
         internal delegate IDelegatingHandler TransportHandlerFactory(IotHubConnectionString iotHubConnectionString, ITransportSettings transportSettings);
@@ -31,24 +28,25 @@ namespace Microsoft.Azure.Devices.Client.Transport
             
         }
 
-        public override async Task OpenAsync(bool explicitOpen)
+        public override async Task OpenAsync(bool explicitOpen, CancellationToken cancellationToken)
         {
-            await this.TryOpenPrioritizedTransportsAsync(explicitOpen);
+            await this.TryOpenPrioritizedTransportsAsync(explicitOpen, cancellationToken);
         }
 
-        async Task TryOpenPrioritizedTransportsAsync(bool explicitOpen)
+        async Task TryOpenPrioritizedTransportsAsync(bool explicitOpen, CancellationToken cancellationToken)
         {
             Exception lastException = null;
             // Concrete Device Client creation was deferred. Use prioritized list of transports.
-            foreach (ITransportSettings transportSetting in this.Context.Get<ITransportSettings[]>(typeof(ITransportSettings[]).Name))
+            foreach (ITransportSettings transportSetting in this.Context.Get<ITransportSettings[]>())
             {
                 try
                 {
                     this.Context.Set(transportSetting);
                     this.InnerHandler = this.ContinuationFactory(this.Context);
 
+                    cancellationToken.ThrowIfCancellationRequested();
                     // Try to open a connection with this transport
-                    await base.OpenAsync(explicitOpen);
+                    await base.OpenAsync(explicitOpen, cancellationToken);
                 }
                 catch (Exception exception)
                 {

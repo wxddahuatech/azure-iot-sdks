@@ -6,9 +6,6 @@ namespace Microsoft.Azure.Devices.Client
     using System;
     using System.Collections.Generic;
 
-#if !WINDOWS_UWP
-    public
-#endif
     class DeviceClientPipelineBuilder : IDeviceClientPipelineBuilder
     {
         readonly List<ContinuationFactory<IDelegatingHandler>> pipeline = new List<ContinuationFactory<IDelegatingHandler>>();

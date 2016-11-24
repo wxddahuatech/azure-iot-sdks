@@ -3,15 +3,9 @@
 
 namespace Microsoft.Azure.Devices.Client
 {
-#if !WINDOWS_UWP
-    public
-#endif
     delegate T ContinuationFactory<out T>(IPipelineContext context);
 
-#if !WINDOWS_UWP
-    public
-#endif
-    interface IContinuationProvider<T> where T: class
+    interface IContinuationProvider<T> where T: IDelegatingHandler
     {
         ContinuationFactory<T> ContinuationFactory { get; set; }
     }

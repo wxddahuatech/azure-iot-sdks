@@ -15,9 +15,6 @@ namespace Microsoft.Azure.Devices.Client.Transport
     /// <summary>
     /// Contains the implementation of methods that a device can use to send messages to and receive from the service.
     /// </summary>
-#if !WINDOWS_UWP
-    public
-#endif
     sealed class GateKeeperDelegatingHandler : DefaultDelegatingHandler
     {
         bool open;

@@ -3,9 +3,6 @@
 
 namespace Microsoft.Azure.Devices.Client.Transport
 {
-#if !WINDOWS_UWP
-    public
-#endif
     interface ITransportHandlerFactory
     {
         IDelegatingHandler Create(IPipelineContext context);

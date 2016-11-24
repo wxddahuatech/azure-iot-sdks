@@ -3,9 +3,6 @@
 
 namespace Microsoft.Azure.Devices.Client
 {
-#if !WINDOWS_UWP
-    public
-#endif
     interface IDeviceClientPipelineBuilder
     {
         IDeviceClientPipelineBuilder With(ContinuationFactory<IDelegatingHandler> delegatingHandlerCreator);

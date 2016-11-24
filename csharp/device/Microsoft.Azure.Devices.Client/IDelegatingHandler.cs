@@ -8,9 +8,6 @@ namespace Microsoft.Azure.Devices.Client
     using System.Threading;
     using System.Threading.Tasks;
 
-#if !WINDOWS_UWP
-    public
-#endif
     interface IDelegatingHandler : IContinuationProvider<IDelegatingHandler>, IDisposable
     {
         Task AbandonAsync(string lockToken, CancellationToken cancellationToken);

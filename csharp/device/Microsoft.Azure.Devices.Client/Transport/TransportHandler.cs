@@ -8,9 +8,6 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using System.Diagnostics;
     using System.Threading.Tasks;
 
-#if !WINDOWS_UWP
-    public
-#endif
     abstract class TransportHandler : DefaultDelegatingHandler
     {
         protected ITransportSettings TransportSettings;
@@ -23,7 +20,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         public override Task<Message> ReceiveAsync(CancellationToken cancellationToken)
         {
-            return this.ReceiveAsync(this.transportSettings.DefaultReceiveTimeout, cancellationToken);
+            return this.ReceiveAsync(this.TransportSettings.DefaultReceiveTimeout, cancellationToken);
         }
 
         protected Task HandleTimeoutCancellation(Func<Task> func, CancellationToken token)

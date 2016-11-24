@@ -6,11 +6,8 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using System;
     using Microsoft.Azure.Devices.Client.Extensions;
 
-#if !WINDOWS_UWP
-#if !NETMF
+#if !WINDOWS_UWP && !NETMF
     using Microsoft.Azure.Devices.Client.Transport.Mqtt;
-#endif
-    public
 #endif
     class TransportHandlerFactory : ITransportHandlerFactory
     {

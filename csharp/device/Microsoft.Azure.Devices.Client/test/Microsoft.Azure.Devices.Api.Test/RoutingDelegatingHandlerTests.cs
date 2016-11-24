@@ -118,7 +118,8 @@ namespace Microsoft.Azure.Devices.Client.Test
             var transportSettings = Substitute.For<ITransportSettings>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
             innerHandler.OpenAsync(Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(TaskConstants.Completed);
-            var sut = new RoutingDelegatingHandler((cs, ts) => innerHandler, null, new[] { transportSettings });
+            var contextMock = Substitute.For<IPipelineContext>();
+            var sut = new ProtocolRoutingDelegatingHandler(contextMock);
 
             var userDefinedTimeoutCancellationTokenSource = new CancellationTokenSource();
             userDefinedTimeoutCancellationTokenSource.Cancel();

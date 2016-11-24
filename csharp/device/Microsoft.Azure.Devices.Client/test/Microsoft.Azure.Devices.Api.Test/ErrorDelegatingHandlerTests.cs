@@ -48,6 +48,7 @@ namespace Microsoft.Azure.Devices.Client.Test
             { typeof(ObjectDisposedException), () => new ObjectDisposedException(ErrorMessage) },
             { typeof(OperationCanceledException), () => new OperationCanceledException(ErrorMessage) },
             { typeof(TaskCanceledException), () => new TaskCanceledException(ErrorMessage) },
+            { typeof(IotHubThrottledException), () => new IotHubThrottledException(ErrorMessage, null) },
             { typeof(SocketException), () => new SocketException(1) },
         };
             
@@ -220,6 +221,7 @@ namespace Microsoft.Azure.Devices.Client.Test
             int ctorCallCounter = 0;
             var contextMock = Substitute.For<IPipelineContext>();
             var innerHandler = Substitute.For<IDelegatingHandler>();
+            innerHandler.OpenAsync(Arg.Is(false), Arg.Any<CancellationToken>()).Returns(TaskConstants.Completed);
             var sut = new ErrorDelegatingHandler(contextMock);
             sut.ContinuationFactory = c => {
                 ctorCallCounter++;
@@ -228,7 +230,6 @@ namespace Microsoft.Azure.Devices.Client.Test
 
             //initial OpenAsync to emulate Gatekeeper behaviour
             var cancellationToken = new CancellationToken();
-            innerHandler.OpenAsync(Arg.Is(false), Arg.Any<CancellationToken>()).Returns(TaskConstants.Completed);
             await sut.OpenAsync(false, cancellationToken);
 
             //set initial operation result that throws

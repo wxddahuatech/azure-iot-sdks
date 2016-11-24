@@ -96,8 +96,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
     {
         const string DeviceId = "DeviceId";
         const string DeviceIdParameterPattern = @"(^\s*?|.*;\s*?)" + DeviceId + @"\s*?=.*";
-#if !PCL
         IotHubConnectionString iotHubConnectionString = null;
+#if !PCL
         const RegexOptions RegexOptions = System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase;
 #else
         const RegexOptions RegexOptions = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
@@ -316,10 +316,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <param name="transportType">Specifies whether Amqp or Http transport is used</param>
         /// <param name="pipelineBuilder">Device client pipeline builder</param>
         /// <returns>DeviceClient</returns>
-#if !WINDOWS_UWP
-        public
-#endif
-        static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType, IDeviceClientPipelineBuilder pipelineBuilder)
+        internal static DeviceClient CreateFromConnectionString(string connectionString, TransportType transportType, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             if (connectionString == null)
             {
@@ -426,10 +423,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <param name="transportSettings">Prioritized list of transports and their settings</param>
         /// <param name="pipelineBuilder">Device client pipeline builder</param>
         /// <returns>DeviceClient</returns>
-#if !WINDOWS_UWP
-        public
-#endif
-        static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
+        internal static DeviceClient CreateFromConnectionString(string connectionString, [System.Runtime.InteropServices.WindowsRuntime.ReadOnlyArray] ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
         {
             if (connectionString == null)
             {

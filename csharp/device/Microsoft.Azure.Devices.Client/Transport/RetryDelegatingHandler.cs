@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
     using Microsoft.Azure.Devices.Client.Exceptions;
     using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 
-    public class RetryDelegatingHandler : DefaultDelegatingHandler
+    class RetryDelegatingHandler : DefaultDelegatingHandler
     {
         const int UndeterminedPosition = -1;
         const string StopRetrying = "StopRetrying";

@@ -17,9 +17,6 @@ namespace Microsoft.Azure.Devices.Client.Transport
     // Copyright (c) Microsoft. All rights reserved.
     // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-    public
-#endif
     sealed class ErrorDelegatingHandler : DefaultDelegatingHandler
     {
 
@@ -48,7 +45,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
             typeof(TaskCanceledException),
         };
 
-        volatile TaskCompletionSource<int> openCompletion;
+        TaskCompletionSource<int> openCompletion;
 
         public ErrorDelegatingHandler(IPipelineContext context)
             : base(context)
@@ -57,19 +54,15 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         public override async Task OpenAsync(bool explicitOpen, CancellationToken cancellationToken)
         {
-            TaskCompletionSource<int> openCompletionBeforeOperationStarted = this.openCompletion;
-            IDelegatingHandler handlerBeforeOperationStarted = this.InnerHandler;
-
+            TaskCompletionSource<int> openCompletionBeforeOperationStarted = Volatile.Read(ref this.openCompletion);
             if (openCompletionBeforeOperationStarted == null)
             {
                 openCompletionBeforeOperationStarted = new TaskCompletionSource<int>();
-#pragma warning disable 420 //Reference to volitile variable will not be treated as volatile which is not quite true in this case.
                 TaskCompletionSource<int> currentOpenPromise;
                 if ((currentOpenPromise = Interlocked.CompareExchange(ref this.openCompletion, openCompletionBeforeOperationStarted, null)) == null)
-#pragma warning restore 420
                 {
-                    this.InnerHandler = this.ContinuationFactory(Context);
-
+                    IDelegatingHandler handlerBeforeOperationStarted = this.ContinuationFactory(Context);
+                    this.InnerHandler = handlerBeforeOperationStarted;
                     try
                     {
                         await this.ExecuteWithErrorHandlingAsync(() => base.OpenAsync(explicitOpen, cancellationToken), false, cancellationToken);
@@ -143,7 +136,7 @@ namespace Microsoft.Azure.Devices.Client.Transport
                 await this.EnsureOpenAsync(cancellationToken);
             }
 
-            TaskCompletionSource<int> openCompletionBeforeOperationStarted = this.openCompletion;
+            TaskCompletionSource<int> openCompletionBeforeOperationStarted = Volatile.Read(ref this.openCompletion);
             IDelegatingHandler handlerBeforeOperationStarted = this.InnerHandler;
 
             try
@@ -225,11 +218,9 @@ namespace Microsoft.Azure.Devices.Client.Transport
 
         void Reset(TaskCompletionSource<int> openCompletionBeforeOperationStarted, IDelegatingHandler handlerBeforeOperationStarted)
         {
-            if (openCompletionBeforeOperationStarted == this.openCompletion)
+            if (openCompletionBeforeOperationStarted == Volatile.Read(ref this.openCompletion))
             {
-#pragma warning disable 420 //Reference to volitile variable will not be treated as volatile which is not quite true in this case.
                 if (Interlocked.CompareExchange(ref this.openCompletion, null, openCompletionBeforeOperationStarted) == openCompletionBeforeOperationStarted)
-#pragma warning restore 420
                 {
                     Cleanup(handlerBeforeOperationStarted);
                 }
