@@ -174,6 +174,18 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             var iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
             Assert.IsNotNull(iotHubConnectionStringBuilder.HostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.DeviceId);
+            Assert.IsNull(iotHubConnectionStringBuilder.GatewayHostName);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.AuthenticationMethod);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessKey);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessKeyName);
+            Assert.IsNull(iotHubConnectionStringBuilder.SharedAccessSignature);
+            Assert.IsTrue(iotHubConnectionStringBuilder.AuthenticationMethod is DeviceAuthenticationWithSharedAccessPolicyKey);
+
+            connectionString = "HostName=acme.azure-devices.net;GatewayHostName=test;SharedAccessKeyName=AllAccessKey;DeviceId=device1;SharedAccessKey=CQN2K33r45/0WeIjpqmErV5EIvX8JZrozt3NEHCEkG8=";
+            iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.HostName);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.DeviceId);
+            Assert.IsNotNull(iotHubConnectionStringBuilder.GatewayHostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.AuthenticationMethod);
             Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessKey);
             Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessKeyName);
@@ -184,6 +196,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
             Assert.IsNotNull(iotHubConnectionStringBuilder.HostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.DeviceId);
+            Assert.IsNull(iotHubConnectionStringBuilder.GatewayHostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.AuthenticationMethod);
             Assert.IsNull(iotHubConnectionStringBuilder.SharedAccessKey);
             Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessSignature);
@@ -193,6 +206,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
             Assert.IsNotNull(iotHubConnectionStringBuilder.HostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.DeviceId);
+            Assert.IsNull(iotHubConnectionStringBuilder.GatewayHostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.AuthenticationMethod);
             Assert.IsNotNull(iotHubConnectionStringBuilder.SharedAccessKey);
             Assert.IsNull(iotHubConnectionStringBuilder.SharedAccessKeyName);
@@ -203,6 +217,7 @@ namespace Microsoft.Azure.Devices.Client.Test.ConnectionString
             iotHubConnectionStringBuilder = IotHubConnectionStringBuilder.Create(connectionString);
             Assert.IsNotNull(iotHubConnectionStringBuilder.HostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.DeviceId);
+            Assert.IsNull(iotHubConnectionStringBuilder.GatewayHostName);
             Assert.IsNotNull(iotHubConnectionStringBuilder.AuthenticationMethod);
             Assert.IsNull(iotHubConnectionStringBuilder.SharedAccessKey);
             Assert.IsNull(iotHubConnectionStringBuilder.SharedAccessKeyName);

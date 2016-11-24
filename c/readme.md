@@ -23,7 +23,7 @@ The library code:
 * Avoids compiler extensions.
 * Exposes a platform abstraction layer to isolate OS dependencies (threading and mutual exclusion mechanisms, communications protocol e.g. HTTP). Refer to [porting guide](doc/porting_guide.md) for more information.
 
-Azure IoT device SDK for C can be used with a broad range of OS platforms and devices. For a list of tested configurations [click here](https://azure.microsoft.com/documentation/articles/iot-hub-tested-configurations/).
+Azure IoT device SDK for C can be used with a broad range of OS platforms and devices. For a list of tested configurations [click here](https://catalog.azureiotsuite.com/).
 
 ## Application development guides
 For information on how to use this library refer to the documents below:
@@ -43,7 +43,7 @@ For guides on how to run the sample applications on supported platforms, check o
 
 All C specific resources are located in the **azure-iot-sdks\c** folder. A description of the key directories follows:
 
-### /azure-c-shared-utility, /azure-uamqp-c, and /azure-umqtt-c
+### /c-utility, /uamqp, and /umqtt
 
 These are git submodules that contain code, such as adapters and protocol implementations, shared with other projects. Note that some of them contain nested submodules.
 
@@ -96,3 +96,44 @@ Contains tools that are currently used in testing the client libraries: Mocking 
 ### /tools
 
 Miscellaneous tools: compilembed, mbed_build, traceabilitytool (checks spec requirements vs code implementation).
+
+## Installation and Use
+- Clone azure-iot-sdks by:
+```
+git clone --recursive https://github.com/Azure/azure-iot-sdks.git
+```
+- Create a folder build under azure-iot-sdks
+- Switch to the build folder and run
+   cmake ..
+
+Optionally, you may choose to install azure-iot-sdks on your machine:
+
+1. Switch to the *cmake* folder and run
+    ```
+    cmake -Duse_installed_dependencies=ON ../
+    ```
+    ```
+    cmake --build . --target install
+    ```
+    
+    or install using the follow commands for each platform:
+
+    On Linux:
+    ```
+    sudo make install
+    ```
+
+    On Windows:
+    ```
+    msbuild /m INSTALL.vcxproj
+    ```
+
+2. Use it in your project (if installed)
+    ```
+    find_package(azure_iot_sdks REQUIRED CONFIG)
+    target_link_library(yourlib iothub_client iothub_service_client serializer)
+    ```
+
+_This requires that azure-c-shared-utility, azure-uamqp-c, and azure-umqtt-c are installed (through CMake) on your machine._
+
+_If running tests, this requires that umock-c, azure-ctest, and azure-c-testrunnerswitcher are installed (through CMake) on your machine._

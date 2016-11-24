@@ -70,7 +70,7 @@ var deviceMetaData = {
     }]
 };
 
-client.open(function (err, result) {
+client.open(function (err) {
   if (err) {
     printErrorFor('open')(err);
   } else {
@@ -115,7 +115,7 @@ client.open(function (err, result) {
     client.on('error', function (err) {
       printErrorFor('client')(err);
       if (sendInterval) clearInterval(sendInterval);
-      client.close();
+      client.close(printErrorFor('client.close'));
     });
   }
 });

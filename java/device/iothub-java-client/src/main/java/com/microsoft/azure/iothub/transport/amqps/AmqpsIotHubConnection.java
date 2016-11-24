@@ -7,9 +7,11 @@ package com.microsoft.azure.iothub.transport.amqps;
 
 import com.microsoft.azure.iothub.DeviceClientConfig;
 import com.microsoft.azure.iothub.IotHubMessageResult;
+import com.microsoft.azure.iothub.ObjectLock;
 import com.microsoft.azure.iothub.auth.IotHubSasToken;
 import com.microsoft.azure.iothub.transport.State;
 import com.microsoft.azure.iothub.transport.TransportUtils;
+import com.microsoft.azure.iothub.ws.impl.WebSocketImpl;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -17,8 +19,18 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
-import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.engine.impl.WebSocketImpl;
+import org.apache.qpid.proton.engine.BaseHandler;
+import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Link;
+import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Sasl;
+import org.apache.qpid.proton.engine.Sender;
+import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.SslDomain;
+import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.impl.TransportInternal;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.reactor.FlowController;
 import org.apache.qpid.proton.reactor.Handshaker;
@@ -26,18 +38,25 @@ import org.apache.qpid.proton.reactor.Reactor;
 import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
 
-
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOError;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.BufferOverflowException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -46,9 +65,9 @@ import java.util.concurrent.Future;
  */
 public final class AmqpsIotHubConnection extends BaseHandler
 {
-    private int maxWaitTimeForOpeningConnection = 30000;
+    private int maxWaitTimeForOpeningClosingConnection = 3*60*1000;
+    private int maxWaitTimeForTerminateExecutor = 30;
     protected State state;
-    private Future reactorFuture;
 
     private static final String sendTag = "sender";
     private static final String receiveTag = "receiver";
@@ -82,13 +101,21 @@ public final class AmqpsIotHubConnection extends BaseHandler
     private List<ServerListener> listeners = new ArrayList<>();
     private ExecutorService executorService;
 
+    private ObjectLock openLock = new ObjectLock();
+    private ObjectLock closeLock = new ObjectLock();
+
+    private Reactor reactor;
+
+    private Boolean reconnectCall = false;
+    private int currentReconnectionAttempt = 1;
+
     /**
      * Constructor to set up connection parameters using the {@link DeviceClientConfig}.
      *
      * @param config The {@link DeviceClientConfig} corresponding to the device associated with this {@link com.microsoft.azure.iothub.DeviceClient}.
      * @param useWebSockets Whether the connection should use web sockets or not.
      */
-    public AmqpsIotHubConnection(DeviceClientConfig config, Boolean useWebSockets)
+    public AmqpsIotHubConnection(DeviceClientConfig config, Boolean useWebSockets) throws IOException
     {
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_001: [The constructor shall throw IllegalArgumentException if
         // any of the parameters of the configuration is null or empty.]
@@ -147,6 +174,14 @@ public final class AmqpsIotHubConnection extends BaseHandler
 
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_006: [The constructor shall set its state to CLOSED.]
         this.state = State.CLOSED;
+
+        try
+        {
+            reactor = Proton.reactor(this);
+        } catch (IOException e)
+        {
+            throw new IOException("Could not create Proton reactor");
+        }
     }
 
     /**
@@ -172,11 +207,7 @@ public final class AmqpsIotHubConnection extends BaseHandler
 			try
             {
                 // Codes_SRS_AMQPSIOTHUBCONNECTION_15_009: [The function shall trigger the Reactor (Proton) to begin running.]
-                this.reactorFuture = this.startReactorAsync();
-
-                // Codes_SRS_AMQPSIOTHUBCONNECTION_15_010: [The function shall wait for the reactor to be ready and for
-                // enough link credit to become available.]
-                this.connectionReady();
+                openAsync();
             }
             catch(Exception e)
             {
@@ -184,6 +215,19 @@ public final class AmqpsIotHubConnection extends BaseHandler
                 // the reactor, the function shall close the connection and throw an IOException.]
                 this.close();
                 throw new IOException("Error opening Amqp connection: ", e);
+            }
+
+            // Codes_SRS_AMQPSIOTHUBCONNECTION_15_010: [The function shall wait for the reactor to be ready and for
+            // enough link credit to become available.]
+            try
+            {
+                synchronized (openLock)
+                {
+                    openLock.waitLock(maxWaitTimeForOpeningClosingConnection);
+                }
+            } catch (InterruptedException e)
+            {
+                throw new IOException("Waited too long for the connection to open.");
             }
         }
     }
@@ -195,7 +239,58 @@ public final class AmqpsIotHubConnection extends BaseHandler
      *     will set the current state to closed and invalidate all connection related variables.
      * </p>
      */
-    public void close()
+    public void close() throws IOException
+    {
+
+        closeAsync();
+
+        try
+        {
+            synchronized (closeLock)
+            {
+                closeLock.waitLock(maxWaitTimeForOpeningClosingConnection);
+            }
+        } catch (InterruptedException e)
+        {
+            throw new IOException("Waited too long for the connection to close.");
+        }
+
+        if (this.executorService != null) {
+            this.executorService.shutdown();
+            try {
+                // Wait a while for existing tasks to terminate
+                if (!this.executorService.awaitTermination(maxWaitTimeForTerminateExecutor, TimeUnit.SECONDS)) {
+                    this.executorService.shutdownNow(); // Cancel currently executing tasks
+                    // Wait a while for tasks to respond to being cancelled
+                    if (!this.executorService.awaitTermination(maxWaitTimeForTerminateExecutor, TimeUnit.SECONDS)){
+                        System.err.println("Pool did not terminate");
+                    }
+                }
+            } catch (InterruptedException ie) {
+                // (Re-)Cancel if current thread also interrupted
+                this.executorService.shutdownNow();
+            }
+        }
+    }
+
+    private void openAsync() throws IOException
+    {
+        if (this.reactor == null)
+        {
+            this.reactor = Proton.reactor(this);
+        }
+
+        if (executorService == null)
+        {
+            executorService = Executors.newFixedThreadPool(1);
+        }
+
+        IotHubReactor iotHubReactor = new IotHubReactor(reactor);
+        ReactorRunner reactorRunner = new ReactorRunner(iotHubReactor);
+        executorService.submit(reactorRunner);
+    }
+
+    private void closeAsync()
     {
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_048 [If the AMQPS connection is already closed, the function shall do nothing.]
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_012: [The function shall set the status of the AMQPS connection to CLOSED.]
@@ -213,10 +308,8 @@ public final class AmqpsIotHubConnection extends BaseHandler
             this.connection.close();
 
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_014: [The function shall stop the Proton reactor.]
-        if (this.reactorFuture != null)
-            this.reactorFuture.cancel(true);
-        if (this.executorService != null)
-            this.executorService.shutdown();
+
+        this.reactor.stop();
     }
 
     /**
@@ -236,6 +329,7 @@ public final class AmqpsIotHubConnection extends BaseHandler
         }
         else
         {
+
             // Codes_SRS_AMQPSIOTHUBCONNECTION_15_016: [The function shall encode the message and copy the contents to the byte buffer.]
             byte[] msgData = new byte[1024];
             int length;
@@ -358,8 +452,9 @@ public final class AmqpsIotHubConnection extends BaseHandler
 
             if (this.useWebSockets)
             {
-                WebSocketImpl webSocket = (WebSocketImpl) transport.webSocket();
+                WebSocketImpl webSocket = new WebSocketImpl();
                 webSocket.configure(this.hostName, webSocketPath, 0, webSocketSubProtocol, null, null);
+                ((TransportInternal)transport).addTransportLayer(webSocket);
             }
 
             // Codes_SRS_AMQPSIOTHUBCONNECTION_15_031: [The event handler shall set the SASL_PLAIN authentication on the transport using the given user name and sas token.]
@@ -369,6 +464,16 @@ public final class AmqpsIotHubConnection extends BaseHandler
             SslDomain domain = makeDomain(SslDomain.Mode.CLIENT);
             transport.ssl(domain);
         }
+        synchronized (openLock)
+        {
+            openLock.notifyLock();
+        }
+    }
+
+    @Override
+    public void onConnectionUnbound(Event event)
+    {
+        this.state = State.CLOSED;
     }
 
     /**
@@ -380,6 +485,29 @@ public final class AmqpsIotHubConnection extends BaseHandler
     {
         // Codes_SRS_AMQPSIOTHUBCONNECTION_15_033: [The event handler shall set the current handler to handle the connection events.]
         event.getReactor().connection(this);
+    }
+
+    @Override
+    public void onReactorFinal(Event event)
+    {
+        synchronized (closeLock)
+        {
+            closeLock.notifyLock();
+        }
+
+        this.reactor = null;
+
+        if (reconnectCall)
+        {
+            reconnectCall = false;
+            try
+            {
+                openAsync();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -468,10 +596,13 @@ public final class AmqpsIotHubConnection extends BaseHandler
     @Override
     public void onLinkRemoteClose(Event event)
     {
-        // Codes_SRS_AMQPSIOTHUBCONNECTION_15_042 [The event handler shall attempt to reconnect to the IoTHub.]
+        this.state = State.CLOSED;
+
+        // Codes_SRS_AMQPSIOTHUBCONNECTION_15_042 [The event handler shall attempt to startReconnect to the IoTHub.]
         if (event.getLink().getName().equals(sendTag))
         {
-            reconnect();
+            // Codes_SRS_AMQPSIOTHUBCONNECTION_15_048: [The event handler shall attempt to startReconnect to IoTHub.]
+            startReconnect();
         }
     }
 
@@ -513,41 +644,10 @@ public final class AmqpsIotHubConnection extends BaseHandler
     @Override
     public void onTransportError(Event event)
     {
-        // Codes_SRS_AMQPSIOTHUBCONNECTION_15_048: [The event handler shall attempt to reconnect to IoTHub.]
-        this.reconnect();
-    }
+        this.state = State.CLOSED;
 
-    /**
-     * Asynchronously runs the Proton {@link Reactor} accepting and sending messages.
-     * @throws IOException if there is an issue creating the reactor.
-     */
-    private Future startReactorAsync() throws IOException
-    {
-        Reactor reactor = Proton.reactor(this);
-        IotHubReactor iotHubReactor = new IotHubReactor(reactor);
-
-        executorService = Executors.newFixedThreadPool(1);
-        ReactorRunner reactorRunner = new ReactorRunner(iotHubReactor);
-        return executorService.submit(reactorRunner);
-    }
-
-    /**
-     * Waits for the reactor to be ready and for enough link credit to be available.
-     * @throws InterruptedException If the current thread was interrupted
-     */
-    private void connectionReady() throws InterruptedException
-    {
-        int waitTime = 0;
-        while(state == State.CLOSED || this.linkCredit == -1)
-        {
-            Thread.sleep(100);
-            waitTime+=100;
-            if (waitTime > maxWaitTimeForOpeningConnection)
-            {
-                throw new InterruptedException("Waited too long for the connection to open.");
-            }
-        }
-        System.out.println("Connection with the server established successfully.");
+        // Codes_SRS_AMQPSIOTHUBCONNECTION_15_048: [The event handler shall attempt to startReconnect to IoTHub.]
+        startReconnect();
     }
 
     /**
@@ -560,38 +660,32 @@ public final class AmqpsIotHubConnection extends BaseHandler
     }
 
     /**
-     * Notifies all listeners that the connection was lost and attempts to reconnect to the IoTHub
+     * Notifies all listeners that the connection was lost and attempts to startReconnect to the IoTHub
      * using an exponential backoff interval.
      */
-    private void reconnect()
+    private void startReconnect()
     {
-        this.close();
+        reconnectCall = true;
 
         for(ServerListener listener : listeners)
         {
             listener.connectionLost();
         }
 
-        int currentReconnectionAttempt = 1;
-        while (this.state == State.CLOSED)
+        if (currentReconnectionAttempt == Integer.MAX_VALUE)
+            currentReconnectionAttempt = 0;
+
+        System.out.println("Lost connection to the server. Reconnection attempt " + currentReconnectionAttempt++ + "...");
+
+        try
         {
-            try
-            {
-                this.open();
-            }
-            catch (IOException e)
-            {
-                try
-                {
-                    System.out.println("Lost connection to the server. Reconnection attempt " + currentReconnectionAttempt++ + "...");
-                    Thread.sleep(TransportUtils.generateSleepInterval(currentReconnectionAttempt));
-                }
-                catch (InterruptedException ex)
-                {
-                    // do nothing, reconnection attempts will continue
-                }
-            }
+            Thread.sleep(TransportUtils.generateSleepInterval(currentReconnectionAttempt));
+        } catch (InterruptedException e)
+        {
+            Thread.currentThread().interrupt();
         }
+
+        closeAsync();
     }
 
     /**
@@ -603,26 +697,6 @@ public final class AmqpsIotHubConnection extends BaseHandler
         for(ServerListener listener : listeners)
         {
             listener.messageReceived(msg);
-        }
-    }
-
-    /**
-     * Class which runs the reactor.
-     */
-    private class ReactorRunner implements Callable
-    {
-        private IotHubReactor iotHubReactor;
-
-        ReactorRunner(IotHubReactor iotHubReactor)
-        {
-            this.iotHubReactor = iotHubReactor;
-        }
-
-        @Override
-        public Object call()
-        {
-            iotHubReactor.run();
-            return null;
         }
     }
 
@@ -769,6 +843,24 @@ public final class AmqpsIotHubConnection extends BaseHandler
         return derPath + ".pem" ;
     }
 
+    /**
+     * Class which runs the reactor.
+     */
+    private class ReactorRunner implements Callable
+    {
+        private IotHubReactor iotHubReactor;
 
+        ReactorRunner(IotHubReactor iotHubReactor)
+        {
+            this.iotHubReactor = iotHubReactor;
+        }
+
+        @Override
+        public Object call()
+        {
+            iotHubReactor.run();
+            return null;
+        }
+    }
 }
 

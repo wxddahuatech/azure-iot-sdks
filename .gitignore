@@ -20,7 +20,9 @@
 x64/
 [Bb]in/
 [Oo]bj/
+/build/release/Maven
 !/build/release/
+[Cc]make/
 
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
@@ -146,9 +148,11 @@ GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
 
-# CPython
+# CPython & Wheels
 *.pyc
 *.pyd
+*.whl
+*.egg-info
 
 # =========================
 # Windows detritus
@@ -208,7 +212,7 @@ java/**/*.crt
 **/typings/**
 **/.vscode/**
 # C/C++ extension for VS Code
-browse.VC.db
+.browse.VC.db*
 
 csharp/device/NuGet/*.exe
 csharp/device/NuGet/*.nupkg
@@ -226,6 +230,7 @@ OnBoardFlash.dat
 OnBoardFlash.dat.smd
 DOTNETMF_FS_EMULATION*/
 /c/cmake
+/c/build
 javawrapper/device/iothub_client_javawrapper/target
 javawrapper/device/samples/direct_call_of_wrapped_functions/target
 javawrapper/device/samples/send-receive-sample/target
@@ -234,3 +239,5 @@ javawrapper/device/samples/file-upload-sample/target
 javawrapper/device/samples/send-event-sample/target
 javawrapper/device/test/target
 javawrapper/device/samples/target
+*.so
+python/build_all/windows/pyenv.bat

@@ -5,7 +5,6 @@
 
 var errors = require('azure-iot-common').errors;
 var deviceAmqp = require('azure-iot-device-amqp');
-var deviceAmqpWs = require('azure-iot-device-amqp-ws');
 var deviceHttp = require('azure-iot-device-http');
 var deviceMqtt = require('azure-iot-device-mqtt');
 
@@ -14,14 +13,17 @@ var device_service_tests = require('./test/device_service.js');
 var registry_tests = require('./test/registry.js');
 var file_upload_tests = require('./test/file_upload.js');
 var device_acknowledge_tests = require('./test/device_acknowledge_tests.js');
+var sas_token_tests = require('./test/sas_token_tests.js');
 var service_client = require('./test/service.js');
 var device_teardown = require('./test/device_teardown.js');
+var twin_e2e_tests = require('./test/twin_e2e_tests.js');
+var device_method = require('./test/device_method.js');
+var job_client = require('./test/job_client.js');
 
 var hubConnectionString = process.env.IOTHUB_CONNECTION_STRING;
 var storageConnectionString = process.env.STORAGE_CONNECTION_STRING;
-var generalProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqpWs.AmqpWs, deviceMqtt.Mqtt];
-var acknowledgementProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqpWs.AmqpWs];
-
+var generalProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs, deviceMqtt.Mqtt];
+var acknowledgementProtocols = [deviceHttp.Http, deviceAmqp.Amqp, deviceAmqp.AmqpWs];
 device_provision(hubConnectionString, function (err, provisionedDevices) {
   if (err) {
     console.log('Unable to create the devices needed.');
@@ -31,10 +33,13 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
         device_acknowledge_tests(hubConnectionString, protocolToTest, deviceToTest);
         });
       generalProtocols.forEach(function(protocolToTest) {
-        file_upload_tests(hubConnectionString, protocolToTest, deviceToTest);
         device_service_tests(hubConnectionString, protocolToTest, deviceToTest);
       });
     });
+    generalProtocols.forEach(function(protocolToTest) {
+      sas_token_tests(hubConnectionString, protocolToTest, provisionedDevices[1]);
+    });
+    file_upload_tests(hubConnectionString, deviceHttp.Http, provisionedDevices[1]);
     service_client(hubConnectionString);
     registry_tests(hubConnectionString, storageConnectionString);
   }
@@ -50,3 +55,8 @@ device_provision(hubConnectionString, function (err, provisionedDevices) {
   /* globals run */
   run();
 });
+
+twin_e2e_tests(hubConnectionString);
+device_method(hubConnectionString);
+job_client(hubConnectionString);
+

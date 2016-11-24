@@ -210,7 +210,6 @@
     <Compile Include="Common\ActionItem.cs" />
     <Compile Include="Common\Amqp\ClientWebSocketTransport.cs" />
     <Compile Include="Common\Amqp\LegacyClientWebSocketTransport.cs" />
-    <Compile Include="Common\Amqp\WebSocketConstants.cs" />
     <Compile Include="Common\Api\IotHubApiResources.cs" />
     <Compile Include="Common\Client\IotHubAmqpProperty.cs" />
     <Compile Include="Common\Data\AmqpErrorMapper.cs" />
@@ -247,6 +246,8 @@
     <Compile Include="Transport\FileUploadResponse.cs" />
     <Compile Include="Transport\ITransportHandlerFactory.cs" />
     <Compile Include="Transport\Mqtt\ChannelMessageProcessingException.cs" />
+    <Compile Include="Transport\Mqtt\ClientWebSocketChannel.cs" />
+    <Compile Include="Transport\Mqtt\ClientWebSocketChannelConfig.cs" />
     <Compile Include="Transport\Mqtt\ConcurrentObjectPool.cs" />
     <Compile Include="Transport\Mqtt\ICancellable.cs" />
     <Compile Include="Transport\Mqtt\ISessionContextProvider.cs" />
@@ -268,6 +269,7 @@
     <Compile Include="Transport\ProtocolRoutingDelegatingHandler.cs" />
     <Compile Include="Transport\RetryDelegatingHandler.cs" />
     <Compile Include="Transport\TransportHandler.cs" />
+    <Compile Include="Transport\WebSocketConstants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="35MSSharedLib1024.snk" />

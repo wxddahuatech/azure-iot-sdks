@@ -3,10 +3,12 @@
 
 namespace Microsoft.Azure.Devices.Client
 {
+    using Common;
     using System;
     using System.Linq;
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
+    using System.Threading;
     using Microsoft.Azure.Devices.Client.Extensions;
     using Microsoft.Azure.Devices.Client.Transport;
 #if !WINDOWS_UWP && !PCL
@@ -23,38 +25,7 @@ namespace Microsoft.Azure.Devices.Client
     using AsyncTaskOfMessage = System.Threading.Tasks.Task<Message>;
 #endif
 
-    /// <summary>
-    /// Transport types supported by DeviceClient - Amqp and HTTP 1.1
-    /// </summary>
-    public enum TransportType
-    {
-        /// <summary>
-        /// Advanced Message Queuing Protocol transport.
-        /// Try Amqp over TCP first and fallback to Amqp over WebSocket if that fails
-        /// </summary>
-        Amqp = 0,
-
-        /// <summary>
-        /// HyperText Transfer Protocol version 1 transport.
-        /// </summary>
-        Http1 = 1,
-
-        /// <summary>
-        /// Advanced Message Queuing Protocol transport over WebSocket only.
-        /// </summary>
-        Amqp_WebSocket_Only = 2,
-
-        /// <summary>
-        /// Advanced Message Queuing Protocol transport over native TCP only
-        /// </summary>
-        Amqp_Tcp_Only = 3,
-
-        /// <summary>
-        /// Message Queuing Telemetry Transport.
-        /// </summary>
-        Mqtt = 4
-    }
-
+    public delegate string MethodCallback(string payload, out MethodStatusType status);
 
     /*
      * Class Diagramm and Chain of Responsibility in Device Client 
@@ -114,6 +85,7 @@ namespace Microsoft.Azure.Devices.Client
                                                                                        +-------------+
 TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have to many overloads in most of the classes.
 */
+
     /// <summary>
     /// Contains methods that a device can use to send messages to and receive from the service.
     /// </summary>
@@ -125,15 +97,30 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         const string DeviceId = "DeviceId";
         const string DeviceIdParameterPattern = @"(^\s*?|.*;\s*?)" + DeviceId + @"\s*?=.*";
 #if !PCL
+        IotHubConnectionString iotHubConnectionString = null;
         const RegexOptions RegexOptions = System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase;
 #else
         const RegexOptions RegexOptions = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
 #endif
         static readonly Regex DeviceIdParameterRegex = new Regex(DeviceIdParameterPattern, RegexOptions);
 
-        IotHubConnectionString iotHubConnectionString = null;
-
         internal IDelegatingHandler InnerHandler { get; set; }
+
+        /// <summary>
+        /// Stores the timeout used in the operation retries.
+        /// </summary>
+        /* Codes_SRS_DEVICECLIENT_28_002: [This property shall be defaulted to 240000 (4 minutes).] */
+        public uint OperationTimeoutInMilliseconds { get; set; } = 4 * 60 * 1000;
+
+        /// <summary>
+        /// Stores the retry strategy used in the operation retries.
+        /// </summary>
+        public RetryPolicyType RetryPolicy { get; set; }
+
+        /// <summary>
+        /// Stores Methods supported by the client device and their associated delegate.
+        /// </summary>
+        Dictionary<string, MethodCallback> deviceMethods;
 
 #if !PCL
         DeviceClient(IotHubConnectionString iotHubConnectionString, ITransportSettings[] transportSettings, IDeviceClientPipelineBuilder pipelineBuilder)
@@ -356,7 +343,11 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
 #if WINDOWS_UWP || PCL
                     throw new NotImplementedException("Mqtt protocol is not supported");
 #else
-                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new MqttTransportSettings(transportType) }, pipelineBuilder);
+                    return CreateFromConnectionString(connectionString, new ITransportSettings[]
+                    {
+                        new MqttTransportSettings(TransportType.Mqtt_Tcp_Only),
+                        new MqttTransportSettings(TransportType.Mqtt_WebSocket_Only)
+                    }, pipelineBuilder);
 #endif
                 case TransportType.Amqp_WebSocket_Only:
                 case TransportType.Amqp_Tcp_Only:
@@ -364,6 +355,13 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                     throw new NotImplementedException("Amqp protocol is not supported");
 #else
                     return CreateFromConnectionString(connectionString, new ITransportSettings[] { new AmqpTransportSettings(transportType) }, pipelineBuilder);
+#endif
+                case TransportType.Mqtt_WebSocket_Only:
+                case TransportType.Mqtt_Tcp_Only:
+#if WINDOWS_UWP || PCL
+                    throw new NotImplementedException("Mqtt protocol is not supported");
+#else
+                    return CreateFromConnectionString(connectionString, new ITransportSettings[] { new MqttTransportSettings(transportType) });
 #endif
                 case TransportType.Http1:
 #if PCL
@@ -468,7 +466,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                         }
                         break;
 #if !WINDOWS_UWP
-                    case TransportType.Mqtt:
+                    case TransportType.Mqtt_WebSocket_Only:
+                    case TransportType.Mqtt_Tcp_Only:
                         if (!(transportSetting is MqttTransportSettings))
                         {
                             throw new InvalidOperationException("Unknown implementation of ITransportSettings type");
@@ -517,12 +516,19 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         }
 #endif
 
-            /// <summary>
-            /// Explicitly open the DeviceClient instance.
-            /// </summary>
+        private CancellationTokenSource GetOperationTimeoutCancellationTokenSource()
+        {
+            return new CancellationTokenSource(TimeSpan.FromMilliseconds(OperationTimeoutInMilliseconds));
+        }
+
+        /// <summary>
+        /// Explicitly open the DeviceClient instance.
+        /// </summary>
+
         public AsyncTask OpenAsync()
         {
-            return this.InnerHandler.OpenAsync(true).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_007: [ The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable(authentication, quota exceed) error occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.OpenAsync(true, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -540,7 +546,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <returns>The receive message or null if there was no message until the default timeout</returns>
         public AsyncTaskOfMessage ReceiveAsync()
         {
-            return this.InnerHandler.ReceiveAsync().AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_011: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable(authentication, quota exceed) error occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.ReceiveAsync(operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -549,8 +556,11 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         /// <returns>The receive message or null if there was no message until the specified time has elapsed</returns>
         public AsyncTaskOfMessage ReceiveAsync(TimeSpan timeout)
         {
-            return this.InnerHandler.ReceiveAsync(timeout).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_011: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable(authentication, quota exceed) error occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.ReceiveAsync(timeout, operationTimeoutCancellationToken));
         }
+
+
 
 #if WINDOWS_UWP
         [Windows.Foundation.Metadata.DefaultOverloadAttribute()]
@@ -567,7 +577,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                 throw Fx.Exception.ArgumentNull("lockToken");
             }
 
-            return this.InnerHandler.CompleteAsync(lockToken).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_013: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication, quota exceed) occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.CompleteAsync(lockToken, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -580,7 +591,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             {
                 throw Fx.Exception.ArgumentNull("message");
             }
-
+            /* Codes_SRS_DEVICECLIENT_28_015: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication, quota exceed) occurs.] */
             return this.CompleteAsync(message.LockToken);
         }
 
@@ -598,8 +609,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             {
                 throw Fx.Exception.ArgumentNull("lockToken");
             }
-
-            return this.InnerHandler.AbandonAsync(lockToken).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_015: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication, quota exceed) occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.AbandonAsync(lockToken, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -631,7 +642,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                 throw Fx.Exception.ArgumentNull("lockToken");
             }
 
-            return this.InnerHandler.RejectAsync(lockToken).AsTaskOrAsyncOp();
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.RejectAsync(lockToken, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -644,8 +655,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             {
                 throw Fx.Exception.ArgumentNull("message");
             }
-
-            return this.RejectAsync(message.LockToken);
+            /* Codes_SRS_DEVICECLIENT_28_017: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication, quota exceed) occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.RejectAsync(message.LockToken, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -658,8 +669,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             {
                 throw Fx.Exception.ArgumentNull("message");
             }
-
-            return this.InnerHandler.SendEventAsync(message).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_019: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication or quota exceed) occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.SendEventAsync(message, operationTimeoutCancellationToken));
         }
 
         /// <summary>
@@ -672,9 +683,51 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
             {
                 throw Fx.Exception.ArgumentNull("messages");
             }
-
-            return this.InnerHandler.SendEventAsync(messages).AsTaskOrAsyncOp();
+            /* Codes_SRS_DEVICECLIENT_28_019: [The async operation shall retry until time specified in OperationTimeoutInMilliseconds property expire or unrecoverable error(authentication or quota exceed) occurs.] */
+            return ApplyTimeout(operationTimeoutCancellationToken => this.InnerHandler.SendEventAsync(messages, operationTimeoutCancellationToken));
         }
+
+        private AsyncTask ApplyTimeout(Func<CancellationToken, System.Threading.Tasks.Task> operation)
+        {
+            if (OperationTimeoutInMilliseconds == 0)
+            {
+                return operation(CancellationToken.None)
+                    .WithTimeout(TimeSpan.MaxValue, () => Resources.OperationTimeoutExpired, CancellationToken.None)
+                    .AsTaskOrAsyncOp();
+            }
+
+            CancellationTokenSource operationTimeoutCancellationTokenSource = GetOperationTimeoutCancellationTokenSource();
+
+            var result = operation(operationTimeoutCancellationTokenSource.Token)
+                .WithTimeout(TimeSpan.FromMilliseconds(OperationTimeoutInMilliseconds), () => Resources.OperationTimeoutExpired, operationTimeoutCancellationTokenSource.Token);
+            result.ContinueWith(t =>
+                {
+                    operationTimeoutCancellationTokenSource.Dispose();
+                });
+            return result.AsTaskOrAsyncOp();
+        }
+
+        private AsyncTaskOfMessage ApplyTimeout(Func<CancellationToken, System.Threading.Tasks.Task<Message>> operation)
+        {
+            if (OperationTimeoutInMilliseconds == 0)
+            {
+                return operation(CancellationToken.None)
+                    .WithTimeout(TimeSpan.MaxValue, () => Resources.OperationTimeoutExpired, CancellationToken.None)
+                    .AsTaskOrAsyncOp();
+            }
+            
+            CancellationTokenSource operationTimeoutCancellationTokenSource = GetOperationTimeoutCancellationTokenSource();
+
+            var result = operation(operationTimeoutCancellationTokenSource.Token)
+                .WithTimeout(TimeSpan.FromMilliseconds(OperationTimeoutInMilliseconds), () => Resources.OperationTimeoutExpired, operationTimeoutCancellationTokenSource.Token);
+            result.ContinueWith(t =>
+                {
+                    operationTimeoutCancellationTokenSource.Dispose();
+                    return t.Result;
+                });
+            return result.AsTaskOrAsyncOp();
+        }
+
 
 #if !WINDOWS_UWP && !PCL
         /// <summary>
@@ -708,6 +761,66 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
         }
 #endif
 
+        /// <summary>
+        /// This method will initialize the transport layer internal Method handling processing. The
+        /// user must call this method at least once before method calls will be enabled.
+        /// </summary>
+        public AsyncTask EnableMethodsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Registers a new delgate for the named method. If a delegate is already associated with
+        /// the named method, it will be replaced with the new delegate.
+        /// <param name="methodName"></param>
+        /// <param name="methodDelegate"></param>
+        /// </summary>
+        public void SetMethodDelegate(string methodName, MethodCallback methodDelegate)
+        {
+            /* codes_SRS_DEVICECLIENT_10_001: [ The SetMethodDelegate shall lazy-initialize the deviceMethods property. ]*/
+            if (this.deviceMethods == null)
+            {
+                this.deviceMethods = new Dictionary<string, MethodCallback>();
+            }
+
+            /* codes_SRS_DEVICECLIENT_10_002: [** If the given methodName already has an associated delegate, the existing delegate shall be removed. ]*/
+            /* codes_SRS_DEVICECLIENT_10_003: [** The given delegate will only be added if it is not null. ]*/
+            if (methodDelegate == null)
+            {
+                this.deviceMethods.Remove(methodName);
+            }
+            else
+            {
+                this.deviceMethods[methodName] = methodDelegate;
+            }
+
+            /* codes_SRS_DEVICECLIENT_10_004: [** The deviceMethods property shall be deleted if the last delegate has been removed. ]*/
+            if (this.deviceMethods.Count == 0)
+            {
+                this.deviceMethods = null;
+            }
+        }
+
+        internal void OnMethodCalled(Method method)
+        {
+            if (this.deviceMethods.ContainsKey(method.Name))
+            {
+                /* codes_SRS_DEVICECLIENT_10_011: [** The OnMethodCalled shall invoke the specified delegate. ]*/
+                MethodStatusType status = MethodStatusType.NotImplemented;
+                method.Result = this.deviceMethods[method.Name](method.Payload, out status);
+                method.Status = status;
+            }
+            else
+            {
+                /* codes_SRS_DEVICECLIENT_10_012: [ If the given method does not have a delegate, the respose shall be set to Unsupported. ]*/
+                method.Result = null;
+                method.Status = MethodStatusType.NotSupported;
+            }
+
+            // ArgumentNullException is percolated to the caller.
+        }
+
         public void Dispose()
         {
             this.InnerHandler?.Dispose();
@@ -728,7 +841,7 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                         new AmqpTransportSettings(TransportType.Amqp_WebSocket_Only)
                         {
                             ClientCertificate = connectionStringBuilder.Certificate
-                        },
+                        }
                     };
                 case TransportType.Amqp_Tcp_Only:
                     return new ITransportSettings[]
@@ -757,7 +870,27 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                 case TransportType.Mqtt:
                     return new ITransportSettings[]
                     {
-                        new MqttTransportSettings(TransportType.Mqtt) 
+                        new MqttTransportSettings(TransportType.Mqtt_Tcp_Only) 
+                        {
+                            ClientCertificate = connectionStringBuilder.Certificate
+                        },
+                        new MqttTransportSettings(TransportType.Mqtt_WebSocket_Only)
+                        {
+                            ClientCertificate = connectionStringBuilder.Certificate
+                        }
+                    };
+                case TransportType.Mqtt_Tcp_Only:
+                    return new ITransportSettings[]
+                    {
+                        new MqttTransportSettings(TransportType.Mqtt_Tcp_Only)
+                        {
+                            ClientCertificate = connectionStringBuilder.Certificate
+                        }
+                    };
+                case TransportType.Mqtt_WebSocket_Only:
+                    return new ITransportSettings[]
+                    {
+                        new MqttTransportSettings(TransportType.Mqtt_WebSocket_Only)
                         {
                             ClientCertificate = connectionStringBuilder.Certificate
                         }
@@ -780,7 +913,8 @@ TODO: revisit DefaultDelegatingHandler - it seems redundant as long as we have t
                     case TransportType.Http1:
                         ((Http1TransportSettings)transportSetting).ClientCertificate = connectionStringBuilder.Certificate;
                         break;
-                    case TransportType.Mqtt:
+                    case TransportType.Mqtt_WebSocket_Only:
+                    case TransportType.Mqtt_Tcp_Only:
                         ((MqttTransportSettings)transportSetting).ClientCertificate = connectionStringBuilder.Certificate;
                         break;
                     default:

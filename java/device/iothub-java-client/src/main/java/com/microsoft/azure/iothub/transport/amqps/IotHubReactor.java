@@ -8,6 +8,8 @@ package com.microsoft.azure.iothub.transport.amqps;
 import org.apache.qpid.proton.engine.HandlerException;
 import org.apache.qpid.proton.reactor.Reactor;
 
+import java.util.concurrent.Future;
+
 public class IotHubReactor
 {
     Reactor reactor;
@@ -16,19 +18,14 @@ public class IotHubReactor
     {
         this.reactor = reactor;
     }
-
+    
     public void run() throws HandlerException
     {
         this.reactor.setTimeout(10);
         this.reactor.start();
-        while(this.reactor.process())
-        {
-            if(Thread.currentThread().isInterrupted())
-            {
-                return;
-            }
-        }
+        while(this.reactor.process()){}
         this.reactor.stop();
+        this.reactor.process();
         this.reactor.free();
     }
 }

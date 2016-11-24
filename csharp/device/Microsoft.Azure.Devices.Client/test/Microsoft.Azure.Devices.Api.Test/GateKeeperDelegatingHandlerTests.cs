@@ -6,6 +6,8 @@ namespace Microsoft.Azure.Devices.Client.Test
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Net.Http;
+    using System.Threading;
     using System.Threading.Tasks;
     using DotNetty.Common.Concurrency;
     using Microsoft.Azure.Devices.Client.Common;
@@ -24,11 +26,12 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
-            innerHandlerMock.OpenAsync(true).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.OpenAsync(true, Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
 
+            var cancellationToken = new CancellationToken();
             var sut = new GateKeeperDelegatingHandler(contextMock);
             sut.ContinuationFactory = c => innerHandlerMock;
-            await sut.OpenAsync();
+            await sut.OpenAsync(cancellationToken);
         }
 
         [TestMethod]
@@ -39,24 +42,25 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
-            innerHandlerMock.OpenAsync(false).Returns(t => TaskConstants.Completed);
-            innerHandlerMock.SendEventAsync(Arg.Any<Message>()).Returns(t => TaskConstants.Completed);
-            innerHandlerMock.SendEventAsync(Arg.Any<IEnumerable<Message>>()).Returns(t => TaskConstants.Completed);
-            innerHandlerMock.ReceiveAsync().Returns(t => Task.FromResult(new Message()));
-            innerHandlerMock.ReceiveAsync(Arg.Any<TimeSpan>()).Returns(t => Task.FromResult(new Message()));
-            innerHandlerMock.AbandonAsync(Arg.Any<string>()).Returns(t => TaskConstants.Completed);
-            innerHandlerMock.CompleteAsync(Arg.Any<string>()).Returns(t => TaskConstants.Completed);
-            innerHandlerMock.RejectAsync(Arg.Any<string>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.OpenAsync(false, Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.SendEventAsync(Arg.Any<Message>(), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.SendEventAsync(Arg.Any<IEnumerable<Message>>(), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.ReceiveAsync(Arg.Any<CancellationToken>()).Returns(t => Task.FromResult(new Message()));
+            innerHandlerMock.ReceiveAsync(Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>()).Returns(t => Task.FromResult(new Message()));
+            innerHandlerMock.AbandonAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.CompleteAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
+            innerHandlerMock.RejectAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
 
+            var cancellationToken = new CancellationToken();
             var actions = new Func<IDelegatingHandler, Task>[]
             {
-                sut => sut.SendEventAsync(new Message()),
-                sut => sut.SendEventAsync(new[] { new Message() }),
-                sut => sut.ReceiveAsync(),
-                sut => sut.ReceiveAsync(TimeSpan.FromSeconds(1)),
-                sut => sut.AbandonAsync(string.Empty),
-                sut => sut.CompleteAsync(string.Empty),
-                sut => sut.RejectAsync(string.Empty),
+                sut => sut.SendEventAsync(new Message(), cancellationToken),
+                sut => sut.SendEventAsync(new[] { new Message() }, cancellationToken),
+                sut => sut.ReceiveAsync(cancellationToken),
+                sut => sut.ReceiveAsync(TimeSpan.FromSeconds(1), cancellationToken),
+                sut => sut.AbandonAsync(string.Empty, cancellationToken),
+                sut => sut.CompleteAsync(string.Empty, cancellationToken),
+                sut => sut.RejectAsync(string.Empty, cancellationToken),
             };
 
             foreach (Func<IDelegatingHandler, Task> action in actions)
@@ -66,7 +70,7 @@ namespace Microsoft.Azure.Devices.Client.Test
                 await action(sut);
             }
 
-            await innerHandlerMock.Received(actions.Length).OpenAsync(false);
+            await innerHandlerMock.Received(actions.Length).OpenAsync(false, Arg.Any<CancellationToken>());
         }
 
         [TestMethod]
@@ -83,7 +87,8 @@ namespace Microsoft.Azure.Devices.Client.Test
             sut.ContinuationFactory = c => innerHandlerMock;
             await sut.CloseAsync();
 
-            await ((Func<Task>)sut.OpenAsync).ExpectedAsync<ObjectDisposedException>();
+            var cancellationToken = new CancellationToken();
+            await ((Func<Task>)(() => sut.OpenAsync(cancellationToken))).ExpectedAsync<ObjectDisposedException>();
         }
 
         [TestMethod]
@@ -96,7 +101,7 @@ namespace Microsoft.Azure.Devices.Client.Test
             var tcs = new TaskCompletionSource();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
             int callCounter = 0;
-            innerHandlerMock.OpenAsync(true).Returns(t =>
+            innerHandlerMock.OpenAsync(true, Arg.Any<CancellationToken>()).Returns(t =>
             {
                 callCounter++;
                 return tcs.Task;
@@ -104,8 +109,9 @@ namespace Microsoft.Azure.Devices.Client.Test
 
             var sut = new GateKeeperDelegatingHandler(contextMock);
             sut.ContinuationFactory = c => innerHandlerMock;
-            Task firstOpen = sut.OpenAsync();
-            Task secondOpen = sut.OpenAsync();
+            var cancellationToken = new CancellationToken();
+            Task firstOpen = sut.OpenAsync(cancellationToken);
+            Task secondOpen = sut.OpenAsync(cancellationToken);
             tcs.Complete();
             await Task.WhenAll(firstOpen, secondOpen);
 
@@ -120,18 +126,18 @@ namespace Microsoft.Azure.Devices.Client.Test
         {
             var contextMock = Substitute.For<IPipelineContext>();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
-            innerHandlerMock.OpenAsync(Arg.Is(true)).Returns(ci =>
+            innerHandlerMock.OpenAsync(Arg.Is(true), Arg.Any<CancellationToken>()).Returns(ci =>
             {
                 throw new IOException();
             });
             var sut = new GateKeeperDelegatingHandler(contextMock);
             sut.ContinuationFactory = c => innerHandlerMock;
+            var cancellationToken = new CancellationToken();
+            await ((Func<Task>)(() => sut.OpenAsync(cancellationToken))).ExpectedAsync<IOException>();
 
-            await ((Func<Task>)sut.OpenAsync).ExpectedAsync<IOException>();
+            innerHandlerMock.OpenAsync(Arg.Is(true), Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
 
-            innerHandlerMock.OpenAsync(Arg.Is(true)).Returns(t => TaskConstants.Completed);
-
-            await sut.OpenAsync();
+            await sut.OpenAsync(cancellationToken);
         }
 
         [TestMethod]
@@ -144,15 +150,15 @@ namespace Microsoft.Azure.Devices.Client.Test
             var tcs = new TaskCompletionSource();
             tcs.SetCanceled();
             var innerHandlerMock = Substitute.For<IDelegatingHandler>();
-            innerHandlerMock.OpenAsync(true).Returns(tcs.Task);
+            innerHandlerMock.OpenAsync(true, Arg.Any<CancellationToken>()).Returns(tcs.Task);
             var sut = new GateKeeperDelegatingHandler(contextMock);
             sut.ContinuationFactory = c => innerHandlerMock;
+            var cancellationToken = new CancellationToken();
+            await sut.OpenAsync(cancellationToken).ExpectedAsync<TaskCanceledException>();
 
-            await sut.OpenAsync().ExpectedAsync<TaskCanceledException>();
+            innerHandlerMock.OpenAsync(true, Arg.Any<CancellationToken>()).Returns(t => TaskConstants.Completed);
 
-            innerHandlerMock.OpenAsync(true).Returns(t => TaskConstants.Completed);
-
-            await sut.OpenAsync();
+            await sut.OpenAsync(cancellationToken);
         }
     }
 }

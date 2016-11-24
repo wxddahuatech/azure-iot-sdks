@@ -26,6 +26,7 @@
 #include "parson.h"
 
 #include "iothub_messaging_ll.h"
+#include "iothub_sc_version.h"
 
 typedef struct CALLBACK_DATA_TAG
 {
@@ -63,10 +64,12 @@ typedef struct IOTHUB_MESSAGING_TAG
     CALLBACK_DATA* callback_data;
 } IOTHUB_MESSAGING;
 
+
 static const char* FEEDBACK_RECORD_KEY_DEVICE_ID = "deviceId";
 static const char* FEEDBACK_RECORD_KEY_DEVICE_GENERATION_ID = "deviceGenerationId";
 static const char* FEEDBACK_RECORD_KEY_DESCRIPTION = "description";
 static const char* FEEDBACK_RECORD_KEY_ENQUED_TIME_UTC = "enqueuedTimeUtc";
+static const char* FEEDBACK_RECORD_KEY_ORIGINAL_MESSAGE_ID = "originalMessageId";
 
 static char* createSasToken(IOTHUB_MESSAGING_HANDLE messagingHandle)
 {
@@ -412,12 +415,12 @@ static AMQP_VALUE IoTHubMessaging_LL_FeedbackMessageReceived(const void* context
                     free(feedbackBatch);
                     result = messaging_delivery_rejected("Rejected due to failure reading AMQP message", "json_array_get_count failed");
                 }
-                else if ((feedbackBatch->feedbackRecordList = list_create()) == NULL)
+                else if ((feedbackBatch->feedbackRecordList = singlylinkedlist_create()) == NULL)
                 {
                     /*Codes_SRS_IOTHUBMESSAGING_12_061: [ If any of the parson API fails, IoTHubMessaging_LL_FeedbackMessageReceived shall return IOTHUB_MESSAGING_INVALID_JSON ] */
-                    LogError("list_create failed");
+                    LogError("singlylinkedlist_create failed");
                     free(feedbackBatch);
-                    result = messaging_delivery_rejected("Rejected due to failure reading AMQP message", "list_create failed");
+                    result = messaging_delivery_rejected("Rejected due to failure reading AMQP message", "singlylinkedlist_create failed");
                 }
                 else
                 {
@@ -443,6 +446,7 @@ static AMQP_VALUE IoTHubMessaging_LL_FeedbackMessageReceived(const void* context
                                 feedbackRecord->generationId = (char*)json_object_get_string(feedback_object, FEEDBACK_RECORD_KEY_DEVICE_GENERATION_ID);
                                 feedbackRecord->description = (char*)json_object_get_string(feedback_object, FEEDBACK_RECORD_KEY_DESCRIPTION);
                                 feedbackRecord->enqueuedTimeUtc = (char*)json_object_get_string(feedback_object, FEEDBACK_RECORD_KEY_ENQUED_TIME_UTC);
+                                feedbackRecord->originalMessageId = (char*)json_object_get_string(feedback_object, FEEDBACK_RECORD_KEY_ORIGINAL_MESSAGE_ID);
                                 feedbackRecord->correlationId = "";
 
                                 if (feedbackRecord->description == NULL)
@@ -478,7 +482,7 @@ static AMQP_VALUE IoTHubMessaging_LL_FeedbackMessageReceived(const void* context
                                         feedbackRecord->statusCode = IOTHUB_FEEDBACK_STATUS_CODE_UNKNOWN;
                                     }
                                 }
-                                list_add(feedbackBatch->feedbackRecordList, feedbackRecord);
+                                singlylinkedlist_add(feedbackBatch->feedbackRecordList, feedbackRecord);
                             }
                         }
                     }
@@ -501,20 +505,19 @@ static AMQP_VALUE IoTHubMessaging_LL_FeedbackMessageReceived(const void* context
                     }
 
                     /*Codes_SRS_IOTHUBMESSAGING_12_078: [** IoTHubMessaging_LL_FeedbackMessageReceived shall do clean up before exits ] */
-                    LIST_ITEM_HANDLE feedbackRecord = list_get_head_item(feedbackBatch->feedbackRecordList);
+                    LIST_ITEM_HANDLE feedbackRecord = singlylinkedlist_get_head_item(feedbackBatch->feedbackRecordList);
                     while (feedbackRecord != NULL)
                     {
-                        IOTHUB_SERVICE_FEEDBACK_RECORD* feedback = (IOTHUB_SERVICE_FEEDBACK_RECORD*)list_item_get_value(feedbackRecord);
-                        feedbackRecord = list_get_next_item(feedbackRecord);
+                        IOTHUB_SERVICE_FEEDBACK_RECORD* feedback = (IOTHUB_SERVICE_FEEDBACK_RECORD*)singlylinkedlist_item_get_value(feedbackRecord);
+                        feedbackRecord = singlylinkedlist_get_next_item(feedbackRecord);
                         free(feedback);
                     }
-                    list_destroy(feedbackBatch->feedbackRecordList);
+                    singlylinkedlist_destroy(feedbackBatch->feedbackRecordList);
                     free(feedbackBatch);
                 }
             }
         }
         json_array_clear(feedback_array);
-        json_object_clear(feedback_object);
         json_value_free(root_value);
     }
     return result;
@@ -668,6 +671,59 @@ void IoTHubMessaging_LL_Destroy(IOTHUB_MESSAGING_HANDLE messagingHandle)
         free(messHandle);
     }
 }
+
+static int attachServiceClientTypeToLink(LINK_HANDLE link)
+{
+    fields attach_properties;
+    AMQP_VALUE serviceClientTypeKeyName;
+    AMQP_VALUE serviceClientTypeValue;
+    int result;
+
+    if ((attach_properties = amqpvalue_create_map()) == NULL)
+    {
+        LogError("Failed to create the map for service client type.");
+        result = __LINE__;
+    }
+    else
+    {
+        if ((serviceClientTypeKeyName = amqpvalue_create_symbol("com.microsoft:client-version")) == NULL)
+        {
+            LogError("Failed to create the key name for the service client type.");
+            result = __LINE__;
+        }
+        else
+        {
+            if ((serviceClientTypeValue = amqpvalue_create_string(IOTHUB_SERVICE_CLIENT_TYPE_PREFIX IOTHUB_SERVICE_CLIENT_BACKSLASH IOTHUB_SERVICE_CLIENT_VERSION)) == NULL)
+            {
+                LogError("Failed to create the key value for the service client type.");
+                result = __LINE__;
+            }
+            else
+            {
+                if ((result = amqpvalue_set_map_value(attach_properties, serviceClientTypeKeyName, serviceClientTypeValue)) != 0)
+                {
+                    LogError("Failed to set the property map for the service client type.  Error code is: %d", result);
+                }
+                else if ((result = link_set_attach_properties(link, attach_properties)) != 0)
+                {
+                    LogError("Unable to attach the service client type to the link properties. Error code is: %d", result);
+                }
+                else
+                {
+                    result = 0;
+                }
+
+                amqpvalue_destroy(serviceClientTypeValue);
+            }
+
+            amqpvalue_destroy(serviceClientTypeKeyName);
+        }
+
+        amqpvalue_destroy(attach_properties);
+    }
+    return result;
+}
+
 
 IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_Open(IOTHUB_MESSAGING_HANDLE messagingHandle, IOTHUB_OPEN_COMPLETE_CALLBACK openCompleteCallback, void* userContextCallback)
 {
@@ -875,20 +931,20 @@ IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_Open(IOTHUB_MESSAGING_HANDLE messagin
                         free((char*)messagingHandle->sasl_plain_config.passwd);
                         result = IOTHUB_MESSAGING_ERROR;
                     }
+                    /*Codes_SRS_IOTHUBMESSAGING_06_001: [ IoTHubMessaging_LL_Open shall add the version property to the sender link by calling the link_set_attach_properties ] */
+                    else if (attachServiceClientTypeToLink(messagingHandle->sender_link) != 0)
+                    {
+                        /*Codes_SRS_IOTHUBMESSAGING_12_030: [ If any of the uAMQP call fails IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_ERROR ] */
+                        LogError("Could not set the sender attach properties.");
+                        free((char*)messagingHandle->sasl_plain_config.authcid);
+                        free((char*)messagingHandle->sasl_plain_config.passwd);
+                        result = IOTHUB_MESSAGING_ERROR;
+                    }
                     /*Codes_SRS_IOTHUBMESSAGING_12_019: [ IoTHubMessaging_LL_Open shall set the AMQP sender link settle mode to sender_settle_mode_unsettled  by calling link_set_snd_settle_mode ] */
                     else if (link_set_snd_settle_mode(messagingHandle->sender_link, sender_settle_mode_unsettled) != 0)
                     {
                         /*Codes_SRS_IOTHUBMESSAGING_12_030: [ If any of the uAMQP call fails IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_ERROR ] */
                         LogError("Could not set the sender settle mode.");
-                        free((char*)messagingHandle->sasl_plain_config.authcid);
-                        free((char*)messagingHandle->sasl_plain_config.passwd);
-                        result = IOTHUB_MESSAGING_ERROR;
-                    }
-                    /*Codes_SRS_IOTHUBMESSAGING_12_020: [ IoTHubMessaging_LL_Open shall set sender link AMQP maximum message size to the server maximum (255K) by calling link_set_max_message_size ] */
-                    else if (link_set_max_message_size(messagingHandle->sender_link, 65536) != 0)
-                    {
-                        /*Codes_SRS_IOTHUBMESSAGING_12_030: [ If any of the uAMQP call fails IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_ERROR ] */
-                        LogError("Could not set the message size.");
                         free((char*)messagingHandle->sasl_plain_config.authcid);
                         free((char*)messagingHandle->sasl_plain_config.passwd);
                         result = IOTHUB_MESSAGING_ERROR;
@@ -931,6 +987,15 @@ IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_Open(IOTHUB_MESSAGING_HANDLE messagin
                     }
                     /*Codes_SRS_IOTHUBMESSAGING_12_024: [ IoTHubMessaging_LL_Open shall create uAMQP receiver link by calling the link_create ] */
                     else if ((messagingHandle->receiver_link = link_create(messagingHandle->session, "receiver-link", role_receiver, receiveSource, receiveTarget)) == NULL)
+                    {
+                        /*Codes_SRS_IOTHUBMESSAGING_12_030: [ If any of the uAMQP call fails IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_ERROR ] */
+                        LogError("Could not create link.");
+                        free((char*)messagingHandle->sasl_plain_config.authcid);
+                        free((char*)messagingHandle->sasl_plain_config.passwd);
+                        result = IOTHUB_MESSAGING_ERROR;
+                    }
+                    /*Codes_SRS_IOTHUBMESSAGING_06_002: [ IoTHubMessaging_LL_Open shall add the version property to the receiver by calling the link_set_attach_properties ] */
+                    else if (attachServiceClientTypeToLink(messagingHandle->receiver_link) != 0)
                     {
                         /*Codes_SRS_IOTHUBMESSAGING_12_030: [ If any of the uAMQP call fails IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_ERROR ] */
                         LogError("Could not create link.");
@@ -1027,6 +1092,27 @@ void IoTHubMessaging_LL_Close(IOTHUB_MESSAGING_HANDLE messagingHandle)
         }
         messagingHandle->isOpened = false;
     }
+}
+
+IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_SetFeedbackMessageCallback(IOTHUB_MESSAGING_HANDLE messagingHandle, IOTHUB_FEEDBACK_MESSAGE_RECEIVED_CALLBACK feedbackMessageReceivedCallback, void* userContextCallback)
+{
+    IOTHUB_MESSAGING_RESULT result;
+
+    /*Codes_SRS_IOTHUBMESSAGING_12_042: [ IoTHubMessaging_LL_SetCallbacks shall verify the messagingHandle input parameter and if it is NULL then return NULL ] */
+    if (messagingHandle == NULL)
+    {
+        LogError("Input parameter cannot be NULL");
+        result = IOTHUB_MESSAGING_INVALID_ARG;
+    }
+    else
+    {
+        /*Codes_SRS_IOTHUBMESSAGING_12_043: [ IoTHubMessaging_LL_SetCallbacks shall save the given feedbackMessageReceivedCallback to use them in local callbacks ] */
+        /*Codes_SRS_IOTHUBMESSAGING_12_044: [ IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_OK after the callbacks have been set ] */
+        messagingHandle->callback_data->feedbackMessageCallback = feedbackMessageReceivedCallback;
+        messagingHandle->callback_data->feedbackUserContext = userContextCallback;
+        result = IOTHUB_MESSAGING_OK;
+    }
+    return result;
 }
 
 IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_Send(IOTHUB_MESSAGING_HANDLE messagingHandle, const char* deviceId, IOTHUB_MESSAGE_HANDLE message, IOTHUB_SEND_COMPLETE_CALLBACK sendCompleteCallback, void* userContextCallback)
@@ -1155,27 +1241,6 @@ IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_Send(IOTHUB_MESSAGING_HANDLE messagin
     if (deviceDestinationString != NULL)
     {
         free(deviceDestinationString);
-    }
-    return result;
-}
-
-IOTHUB_MESSAGING_RESULT IoTHubMessaging_LL_SetFeedbackMessageCallback(IOTHUB_MESSAGING_HANDLE messagingHandle, IOTHUB_FEEDBACK_MESSAGE_RECEIVED_CALLBACK feedbackMessageReceivedCallback, void* userContextCallback)
-{
-    IOTHUB_MESSAGING_RESULT result;
-
-    /*Codes_SRS_IOTHUBMESSAGING_12_042: [ IoTHubMessaging_LL_SetCallbacks shall verify the messagingHandle input parameter and if it is NULL then return NULL ] */
-    if (messagingHandle == NULL)
-    {
-        LogError("Input parameter cannot be NULL");
-        result = IOTHUB_MESSAGING_INVALID_ARG;
-    }
-    else
-    {
-        /*Codes_SRS_IOTHUBMESSAGING_12_043: [ IoTHubMessaging_LL_SetCallbacks shall save the given feedbackMessageReceivedCallback to use them in local callbacks ] */
-        /*Codes_SRS_IOTHUBMESSAGING_12_044: [ IoTHubMessaging_LL_Open shall return IOTHUB_MESSAGING_OK after the callbacks have been set ] */
-        messagingHandle->callback_data->feedbackMessageCallback = feedbackMessageReceivedCallback;
-        messagingHandle->callback_data->feedbackUserContext = userContextCallback;
-        result = IOTHUB_MESSAGING_OK;
     }
     return result;
 }
