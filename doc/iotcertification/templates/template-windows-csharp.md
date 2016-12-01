@@ -1,10 +1,10 @@
 ---
-platform: {enter the OS name running on device}
-device: {enter your device name here}
+platform: {Win10 Iot X64}
+device: {DHI DSS-EMS}
 language: csharp
 ---
 
-Run a simple Csharp sample on {enter your device name here} device running {enter the OS name running on device}
+Run a simple Csharp sample on {HI DSS-EMS} device running {Win10 Iot X64}
 ===
 ---
 
